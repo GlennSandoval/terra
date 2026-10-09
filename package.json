@@ -6,7 +6,8 @@
   "scripts": {
     "prebuild": "node -e \"require('node:fs').mkdirSync('dist', {recursive: true})\"",
     "build": "browserify app/main.js --standalone terra --outfile dist/terra.js && terser dist/terra.js --compress --mangle --output dist/terra.min.js",
-    "prepack": "npm run build"
+    "prepack": "npm run build",
+    "test": "npm run build && node --test tests/test.js"
   },
   "keywords": [
     "terrarium",
