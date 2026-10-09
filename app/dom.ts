@@ -1,6 +1,7 @@
 // Creates an HD canvas element on page and
 // returns a reference to the element
-var createCanvasElement = function (width, height, cellSize, id, insertAfter, background) {
+import type {Color} from './types';
+var createCanvasElement = function (width: number, height: number, cellSize: number, id?: string, insertAfter?: Element, background?: Color): HTMLCanvasElement {
   width *= cellSize;
   height *= cellSize;
 
@@ -8,11 +9,17 @@ var createCanvasElement = function (width, height, cellSize, id, insertAfter, ba
   // resolution, then displays it properly using styles
   function createHDCanvas () {
     var canvas = document.createElement('canvas');
-    var ctx = canvas.getContext('2d');
+    var ctx = canvas.getContext('2d')!;
 
     // Creates a dummy canvas to test device's pixel ratio
     var ratio = (function () {
-      var ctx = document.createElement('canvas').getContext('2d');
+      var ctx = document.createElement('canvas').getContext('2d')! as CanvasRenderingContext2D & {
+        webkitBackingStorePixelRatio?: number;
+        mozBackingStorePixelRatio?: number;
+        msBackingStorePixelRatio?: number;
+        oBackingStorePixelRatio?: number;
+        backingStorePixelRatio?: number;
+      };
       var dpr = window.devicePixelRatio || 1;
       var bsr = ctx.webkitBackingStorePixelRatio ||
                 ctx.mozBackingStorePixelRatio ||
@@ -37,12 +44,10 @@ var createCanvasElement = function (width, height, cellSize, id, insertAfter, ba
 
   var canvas = createHDCanvas();
 
-  if (insertAfter) insertAfter.parentNode.insertBefore(canvas, insertAfter.nextSibling);
+  if (insertAfter) insertAfter.parentNode!.insertBefore(canvas, insertAfter.nextSibling);
   else document.body.appendChild(canvas);
 
   return canvas;
 };
 
-module.exports = {
-  createCanvasElement: createCanvasElement
-};
+export {createCanvasElement};

@@ -12,12 +12,12 @@ bun install
 bun run test
 ```
 
-`bun run test` builds the library and checks the package entry and browser
-bundle. To build without running tests, use `bun run build`. Rollup produces
-the UMD bundle `dist/terra.js`; Terser writes `dist/terra.min.js`. The latter
-is the package entry and exposes `terra` in browsers. Demo sources are not
-included in this repo, so the former Bower/Gulp demo tasks are not part of
-this build.
+`bun run test` builds the library, type-checks the TypeScript sources in `app/`,
+and checks the package entry and browser bundle. To build without running tests,
+use `bun run build`. Rollup produces the UMD bundle `dist/terra.js`; Terser
+writes `dist/terra.min.js`. The latter is the package entry and exposes `terra`
+in browsers. Demo sources are not included in this repo, so the former
+Bower/Gulp demo tasks are not part of this build.
 
 ## Contributing
 At this stage **the most important way you can help is to use the library**. The API is in Beta and still flexible. If you discover something that's confusing or hard to work with, document it [here](https://github.com/rileyjshaw/terra/issues). Come up with an idea and try to build it; by using and testing the library you'll find bugs or usability issues that would otherwise go unnoticed.

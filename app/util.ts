@@ -1,9 +1,10 @@
-// Seed Math.random() with seedrandom
-require('seedrandom')('terra :)', {global: true});
+import seedrandom from 'seedrandom';
+import customLodash from '../lodash_custom/lodash.custom.min.js';
+import type {NeighborCoordinates, WeightedCreature} from './types';
 
-// an extended custom build of lodash, generated with:
-// lodash exports=commonjs include=assign,clone,filter,each,map,random,reduce,some
-var _ = require('../lodash_custom/lodash.custom.min.js')._;
+
+seedrandom('terra :)', {global: true});
+var _ = customLodash._;
 
 /**
  * Takes a cell and returns the coordinates of its neighbors
@@ -14,7 +15,7 @@ var _ = require('../lodash_custom/lodash.custom.min.js')._;
  * @param  {int} radius - (default = 1) neighbor radius
  * @return {array}      - an array of [x, y] pairs of the neighboring cells
  */
-_.getNeighborCoordsFn = function (xMax, yMax, vonNeumann, periodic) {
+_.getNeighborCoordsFn = function (xMax: number, yMax: number, vonNeumann: boolean, periodic: boolean | undefined): NeighborCoordinates {
   if (periodic) {
     if (vonNeumann) {
       // periodic von neumann
@@ -110,18 +111,14 @@ _.getNeighborCoordsFn = function (xMax, yMax, vonNeumann, periodic) {
   }
 };
 
-_.pickRandomWeighted = function (weightedArrays) {
+_.pickRandomWeighted = function (weightedArrays: WeightedCreature[]): string | false {
   var sum = 0, rand = _.random(100, true);
-  var cur, i;
-  for (i = 0, _len = weightedArrays.length; i < _len; i++) {
-    cur = weightedArrays[i];
+  for (var i = 0; i < weightedArrays.length; i++) {
+    var cur = weightedArrays[i];
     sum += cur[1];
     if (sum > rand) return cur[0];
   } return false;
 };
 
-/**
- * CommonJS exports
- * @type {Object}
- */
-module.exports = _;
+export default _;
+

@@ -1,7 +1,47 @@
-var _ = require('./util');
-var factory = require('./creature.js');
-var display = require('./display.js');
-var dom = require('./dom.js');
+import _ from './util';
+import factory from './creature';
+import display from './display';
+import {createCanvasElement} from './dom';
+import type {Color, Coordinate, Creature, CreatureAction, Grid, Neighbor, NeighborCoordinates, WeightedCreature} from './types';
+
+interface TerrariumOptions {
+  id?: string;
+  cellSize?: number;
+  neighborhood?: string;
+  neighbourhood?: string;
+  trails?: number;
+  background?: Color;
+  insertAfter?: Element;
+  periodic?: boolean;
+}
+
+type GridContent = string | string[][] | ((x: number, y: number) => string) | undefined;
+type PendingGrid = Array<Array<CreatureAction[] | false>>;
+
+interface TerrariumInstance {
+  width: number;
+  height: number;
+  cellSize: number;
+  trails: number | undefined;
+  background: Color | undefined;
+  canvas: HTMLCanvasElement;
+  grid: Grid;
+  nextFrame: number | false;
+  hasChanged: boolean;
+  getNeighborCoords: NeighborCoordinates;
+  makeGrid(content?: GridContent): Grid;
+  makeGridWithDistribution(distribution: WeightedCreature[]): Grid;
+  step(steps?: number): Grid | false | undefined;
+  draw(): void;
+  animate(steps?: number | (() => void) | null, fn?: () => void): void;
+  stop(): void;
+  destroy(): void;
+}
+
+interface TerrariumConstructor {
+  new(width: number, height: number, options?: TerrariumOptions | null): TerrariumInstance;
+  prototype: TerrariumInstance;
+}
 
 /**
  * Terrarium constructor function
@@ -16,7 +56,7 @@ var dom = require('./dom.js');
  *                                    "background" option is required if trails is set
  *   @param {array} background      an RGB triplet for the canvas' background
  */
-function Terrarium (width, height, options) {
+const Terrarium: TerrariumConstructor = function (this: TerrariumInstance, width: number, height: number, options?: TerrariumOptions | null) {
   var cellSize, neighborhood;
 
   // cast width and height to integers
@@ -34,12 +74,12 @@ function Terrarium (width, height, options) {
   this.cellSize = cellSize;
   this.trails = options.trails;
   this.background = options.background;
-  this.canvas = dom.createCanvasElement(width, height, cellSize, options.id, options.insertAfter, this.background);
+  this.canvas = createCanvasElement(width, height, cellSize, options.id, options.insertAfter, this.background);
   this.grid = [];
   this.nextFrame = false;
   this.hasChanged = false;
   this.getNeighborCoords = _.getNeighborCoordsFn(width, height, neighborhood === 'vonneumann', options.periodic);
-}
+} as unknown as TerrariumConstructor;
 
 /**
  * Create a grid and fill it by using a function, 2-d array, or uniform type
@@ -49,15 +89,15 @@ function Terrarium (width, height, options) {
  *                        otherwise, create empty grid
  * @return {grid}       a grid adhering to the above rules
  */
-Terrarium.prototype.makeGrid = function (content) {
-  var grid = [], type = typeof content;
+Terrarium.prototype.makeGrid = function (this: TerrariumInstance, content?: GridContent): Grid {
+  var grid: Grid = [];
   for (var x = 0, _w = this.width; x < _w; x++) {
     grid.push([]);
     for (var y = 0, _h = this.height; y < _h; y++) {
       grid[x].push(factory.make(
-        type === 'function' ? content(x, y) :
-        type === 'object' && content.length ? (content[y] || [])[x] :
-        type === 'string' ? content :
+        typeof content === 'function' ? content(x, y) :
+        typeof content === 'object' && content!.length ? (content![y] || [])[x] :
+        typeof content === 'string' ? content :
         undefined
       ));
     }
@@ -68,8 +108,8 @@ Terrarium.prototype.makeGrid = function (content) {
  * Create a grid and fill it randomly with a set creature distribution
  * @param  {array} distribution   an array of arrays of the form [string 'creatureName', float fillPercent]
  */
-Terrarium.prototype.makeGridWithDistribution = function (distribution) {
-  var current, rand = 0, grid = [];
+Terrarium.prototype.makeGridWithDistribution = function (this: TerrariumInstance, distribution: WeightedCreature[]): Grid {
+  var grid: Grid = [];
   for (var x = 0, _w = this.width; x < _w; x++) {
     grid.push([]);
     for (var y = 0, _h = this.height; y < _h; y++) {
@@ -83,10 +123,12 @@ Terrarium.prototype.makeGridWithDistribution = function (distribution) {
  * @param  {} steps   the number of steps to run through before returning
  * @return {grid}     a new grid after <steps> || 1 steps
  */
-Terrarium.prototype.step = function (steps) {
-  function copyAndRemoveInner (origCreature) {
+Terrarium.prototype.step = function (this: TerrariumInstance, steps?: number): Grid | false | undefined {
+  function copyAndRemoveInner (origCreature: Creature | false): Creature | false {
     if (origCreature) {
-      var copy = _.assign(new (origCreature.constructor)(), origCreature);
+      // Registered cells retain their concrete constructors when copied.
+      const CreatureConstructor = origCreature.constructor as unknown as new () => Creature;
+      var copy = _.assign(new CreatureConstructor(), origCreature);
       var dead = copy && copy.isDead();
       if (dead && !self.hasChanged) self.hasChanged = true;
       copy.age++;
@@ -95,30 +137,33 @@ Terrarium.prototype.step = function (steps) {
     } else return false;
   }
 
-  function copyAndRemove (origCols) {
+  function copyAndRemove (origCols: Array<Creature | false>): Array<Creature | false> {
     return _.map(origCols, copyAndRemoveInner);
   }
 
   // TODO: Switch coords to just x and y to be consistent w/ pickWinnerInner
-  function zipCoordsWithNeighbors (coords) {
+  function zipCoordsWithNeighbors (coords: Coordinate): Neighbor {
     return {
       coords: coords,
       creature: oldGrid[coords.x][coords.y]
     };
   }
 
-  function processLoser (loser) {
-    var loserCreature = loser.creature;
+  function processLoser (loser: Creature | CreatureAction): void {
+    // Losers are either creatures or action records; preserve the legacy property probe.
+    var action = loser as CreatureAction;
+    var loserCreature = action.creature;
     if (loserCreature) {
-      loserCreature.failureFn();
+      loserCreature.failureFn!();
       loserCreature.boundEnergy();
     } else {
-      loser.wait();
-      loser.boundEnergy();
+      var creature = loser as Creature;
+      creature.wait();
+      creature.boundEnergy();
     }
   }
 
-  function processCreaturesInner (creature, x, y) {
+  function processCreaturesInner (creature: Creature | false, x: number, y: number): void {
     if (creature) {
       var neighbors = _.map(
         self.getNeighborCoords(x, y, creature.actionRadius),
@@ -130,9 +175,12 @@ Terrarium.prototype.step = function (steps) {
         var returnedCreature = result.creature;
         var returnedY = result.y;
 
-        if (!eigenColumn[returnedY]) eigenColumn[returnedY] = [];
-
-        eigenColumn[returnedY].push({
+        var contenders = eigenColumn[returnedY];
+        if (!contenders) {
+          contenders = [];
+          eigenColumn[returnedY] = contenders;
+        }
+        contenders.push({
           x: x,
           y: y,
           creature: returnedCreature
@@ -145,24 +193,25 @@ Terrarium.prototype.step = function (steps) {
     }
   }
 
-  function processCreatures (column, x) {
-    _.each(column, function (creature, y) { processCreaturesInner(creature, x, y); });
+  function processCreatures (column: Array<Creature | false>, x: number): void {
+    _.each(column, function (creature: Creature | false, y: number) { processCreaturesInner(creature, x, y); });
   }
 
-  function pickWinnerInner (superposition, x, y) {
+  function pickWinnerInner (superposition: CreatureAction[] | false, x: number, y: number): void {
     if (superposition) {
       var winner = superposition.splice(_.random(superposition.length - 1), 1)[0];
-      var winnerCreature = winner.creature;
+      // Actions in this grid were emitted by live creatures.
+      var winnerCreature = winner.creature as Creature;
 
       // clear the original creature's square if successFn returns false
-      if (!winnerCreature.successFn()) {
-        newGrid[winner.x][winner.y] = false;
+      if (!winnerCreature.successFn!()) {
+        newGrid![winner.x][winner.y] = false;
       }
       // TODO: so many calls to this. Can we just run it once at the start of a step?
       winnerCreature.boundEnergy();
 
       // put the winner in its rightful place
-      newGrid[x][y] = winnerCreature;
+      newGrid![x][y] = winnerCreature;
 
       // ...and call wait() on the losers. We can do this without
       // affecting temporal consistency because all callbacks have
@@ -171,15 +220,14 @@ Terrarium.prototype.step = function (steps) {
     }
   }
 
-  function pickWinner (column, x) {
-    _.each(column, function (superposition, y) { pickWinnerInner(superposition, x, y); });
+  function pickWinner (column: Array<CreatureAction[] | false>, x: number): void {
+    _.each(column, function (superposition: CreatureAction[] | false, y: number) {
+      pickWinnerInner(superposition, x, y);
+    });
   }
 
   var self = this;
-  var gridWidth = this.width;
-  var gridHeight = this.height;
-  var oldGrid = this.grid, newGrid, eigenGrid;
-
+  var oldGrid: Grid = this.grid, newGrid: Grid | undefined, eigenGrid: PendingGrid;
   if (typeof steps !== 'number') steps = 1;
 
   while (steps--) {
@@ -191,7 +239,8 @@ Terrarium.prototype.step = function (steps) {
     newGrid = _.map(oldGrid, copyAndRemove);
 
     // create an empty grid to hold creatures competing for the same square
-    eigenGrid = this.makeGrid();
+    // This grid is reused as a matrix of contender lists during the simulation step.
+    eigenGrid = this.makeGrid() as unknown as PendingGrid;
 
     // Add each creature's intended destination to the eigenGrid
     _.each(newGrid, processCreatures);
@@ -208,7 +257,7 @@ Terrarium.prototype.step = function (steps) {
 /**
  * Updates the canvas to reflect the current grid
  */
-Terrarium.prototype.draw = function () {
+Terrarium.prototype.draw = function (this: TerrariumInstance): void {
   display(this.canvas, this.grid, this.cellSize, this.trails, this.background);
 };
 
@@ -217,7 +266,7 @@ Terrarium.prototype.draw = function () {
  * @param  {int}   steps   the simulation will stop after <steps> steps if specified
  * @param  {Function} fn   called as a callback once the animation finishes
  */
-Terrarium.prototype.animate = function (steps, fn) {
+Terrarium.prototype.animate = function (this: TerrariumInstance, steps?: number | (() => void) | null, fn?: () => void): void {
   function tick () {
     var grid = self.step();
     if (grid) {
@@ -244,18 +293,18 @@ Terrarium.prototype.animate = function (steps, fn) {
 /**
  * Stops a currently running animation
  */
-Terrarium.prototype.stop = function () {
-  cancelAnimationFrame(this.nextFrame);
+Terrarium.prototype.stop = function (this: TerrariumInstance): void {
+  cancelAnimationFrame(this.nextFrame || 0);
   this.nextFrame = false;
 };
 
 /**
  * Stops any currently running animation and cleans up the DOM
  */
-Terrarium.prototype.destroy = function () {
+Terrarium.prototype.destroy = function (this: TerrariumInstance): void {
   var canvas = this.canvas;
   this.stop();
-  canvas.parentNode.removeChild(canvas);
+  canvas.parentNode!.removeChild(canvas);
 };
 
-module.exports = Terrarium;
+export default Terrarium;

@@ -1,8 +1,8 @@
 (function (global, factory) {
-	typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
-	typeof define === 'function' && define.amd ? define(factory) :
-	(global = typeof globalThis !== 'undefined' ? globalThis : global || self, global.terra = factory());
-})(this, (function () { 'use strict';
+	typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
+	typeof define === 'function' && define.amd ? define(['exports'], factory) :
+	(global = typeof globalThis !== 'undefined' ? globalThis : global || self, factory(global.terra = {}));
+})(this, (function (exports) { 'use strict';
 
 	var commonjsGlobal = typeof globalThis !== 'undefined' ? globalThis : typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
 
@@ -715,7 +715,7 @@
 		return tychei$1.exports;
 	}
 
-	var seedrandom$2 = {exports: {}};
+	var seedrandom$3 = {exports: {}};
 
 	var _nodeResolve_empty = {};
 
@@ -749,12 +749,12 @@
 	SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 	*/
-	var seedrandom$1 = seedrandom$2.exports;
+	var seedrandom$2 = seedrandom$3.exports;
 
 	var hasRequiredSeedrandom$1;
 
 	function requireSeedrandom$1 () {
-		if (hasRequiredSeedrandom$1) return seedrandom$2.exports;
+		if (hasRequiredSeedrandom$1) return seedrandom$3.exports;
 		hasRequiredSeedrandom$1 = 1;
 		(function (module) {
 			(function (global, pool, math) {
@@ -979,19 +979,19 @@
 			})(
 			  // global: `self` in browsers (including strict mode and web workers),
 			  // otherwise `this` in Node and other environments
-			  (typeof self !== 'undefined') ? self : seedrandom$1,
+			  (typeof self !== 'undefined') ? self : seedrandom$2,
 			  [],     // pool: entropy pool starts empty
 			  Math    // math: package containing random, pow, and seedrandom
 			); 
-		} (seedrandom$2));
-		return seedrandom$2.exports;
+		} (seedrandom$3));
+		return seedrandom$3.exports;
 	}
 
-	var seedrandom;
+	var seedrandom$1;
 	var hasRequiredSeedrandom;
 
 	function requireSeedrandom () {
-		if (hasRequiredSeedrandom) return seedrandom;
+		if (hasRequiredSeedrandom) return seedrandom$1;
 		hasRequiredSeedrandom = 1;
 		// A library of seedable RNGs implemented in Javascript.
 		//
@@ -1052,9 +1052,12 @@
 		sr.xor4096 = xor4096;
 		sr.tychei = tychei;
 
-		seedrandom = sr;
-		return seedrandom;
+		seedrandom$1 = sr;
+		return seedrandom$1;
 	}
+
+	var seedrandomExports = requireSeedrandom();
+	var seedrandom = /*@__PURE__*/getDefaultExportFromCjs(seedrandomExports);
 
 	var lodash_custom_min$1 = {exports: {}};
 
@@ -1093,746 +1096,615 @@
 		return lodash_custom_min$1.exports;
 	}
 
-	var util;
-	var hasRequiredUtil;
+	var lodash_custom_minExports = requireLodash_custom_min();
+	var customLodash = /*@__PURE__*/getDefaultExportFromCjs(lodash_custom_minExports);
 
-	function requireUtil () {
-		if (hasRequiredUtil) return util;
-		hasRequiredUtil = 1;
-		// Seed Math.random() with seedrandom
-		requireSeedrandom()('terra :)', {global: true});
+	seedrandom('terra :)', { global: true });
+	var _ = customLodash._;
+	/**
+	 * Takes a cell and returns the coordinates of its neighbors
+	 * @param  {int} x0     - x position of cell
+	 * @param  {int} y0     - y position of cell
+	 * @param  {int} xMax   - maximum x index i.e. grid width
+	 * @param  {int} yMax   - maximum x index i.e. grid height
+	 * @param  {int} radius - (default = 1) neighbor radius
+	 * @return {array}      - an array of [x, y] pairs of the neighboring cells
+	 */
+	_.getNeighborCoordsFn = function (xMax, yMax, vonNeumann, periodic) {
+	    if (periodic) {
+	        if (vonNeumann) {
+	            // periodic von neumann
+	            return function (x0, y0, radius) {
+	                var coords = [], x, rX, y, rY, rYMax;
+	                for (rX = -radius; rX <= radius; ++rX) {
+	                    rYMax = radius - Math.abs(rX);
+	                    for (rY = -rYMax; rY <= rYMax; ++rY) {
+	                        x = ((rX + x0) % xMax + xMax) % xMax;
+	                        y = ((rY + y0) % yMax + yMax) % yMax;
+	                        if (x !== x0 || y !== y0) {
+	                            coords.push({
+	                                x: x,
+	                                y: y
+	                            });
+	                        }
+	                    }
+	                }
+	                return coords;
+	            };
+	        }
+	        else {
+	            // periodic moore
+	            return function (x0, y0, radius) {
+	                var coords = [], x, xLo, xHi, y, yLo, yHi;
+	                xLo = x0 - radius;
+	                yLo = y0 - radius;
+	                xHi = x0 + radius;
+	                yHi = y0 + radius;
+	                for (x = xLo; x <= xHi; ++x) {
+	                    for (y = yLo; y <= yHi; ++y) {
+	                        if (x !== x0 || y !== y0) {
+	                            coords.push({
+	                                x: (x % xMax + xMax) % xMax,
+	                                y: (y % yMax + yMax) % yMax
+	                            });
+	                        }
+	                    }
+	                }
+	                return coords;
+	            };
+	        }
+	    }
+	    else {
+	        // non-periodic, need to restrict to within [0, max)
+	        xMax -= 1;
+	        yMax -= 1;
+	        if (vonNeumann) {
+	            //non-periodic von-neumann
+	            return function (x0, y0, radius) {
+	                var coords = [], x, rX, y, rY, rYMax;
+	                for (rX = -radius; rX <= radius; ++rX) {
+	                    rYMax = radius - Math.abs(rX);
+	                    for (rY = -rYMax; rY <= rYMax; ++rY) {
+	                        x = rX + x0;
+	                        y = rY + y0;
+	                        if (x >= 0 && y >= 0 && x <= xMax && y <= yMax && (x !== x0 || y !== y0)) {
+	                            coords.push({
+	                                x: x,
+	                                y: y
+	                            });
+	                        }
+	                    }
+	                }
+	                return coords;
+	            };
+	        }
+	        else {
+	            // non-periodic moore
+	            return function (x0, y0, radius) {
+	                var coords = [], x, xLo, xHi, y, yLo, yHi;
+	                xLo = Math.max(0, x0 - radius);
+	                yLo = Math.max(0, y0 - radius);
+	                xHi = Math.min(x0 + radius, xMax);
+	                yHi = Math.min(y0 + radius, yMax);
+	                for (x = xLo; x <= xHi; ++x)
+	                    for (y = yLo; y <= yHi; ++y)
+	                        if (x !== x0 || y !== y0)
+	                            coords.push({ x: x, y: y });
+	                return coords;
+	            };
+	        }
+	    }
+	};
+	_.pickRandomWeighted = function (weightedArrays) {
+	    var sum = 0, rand = _.random(100, true);
+	    for (var i = 0; i < weightedArrays.length; i++) {
+	        var cur = weightedArrays[i];
+	        sum += cur[1];
+	        if (sum > rand)
+	            return cur[0];
+	    }
+	    return false;
+	};
 
-		// an extended custom build of lodash, generated with:
-		// lodash exports=commonjs include=assign,clone,filter,each,map,random,reduce,some
-		var _ = requireLodash_custom_min()._;
+	// abstract factory that adds a superclass of baseCreature
+	var factory = (function () {
+	    function baseCreature() {
+	        this.age = -1;
+	    }
+	    function baseCA() {
+	        this.age = -1;
+	    }
+	    // The legacy function constructors back the dynamically registered prototype chains.
+	    const BaseCreatureConstructor = baseCreature;
+	    const BaseCAConstructor = baseCA;
+	    baseCreature.prototype.initialEnergy = 50;
+	    baseCreature.prototype.maxEnergy = 100;
+	    baseCreature.prototype.efficiency = 0.7;
+	    baseCreature.prototype.size = 50;
+	    baseCreature.prototype.actionRadius = 1;
+	    baseCreature.prototype.sustainability = 2;
+	    // used as percentages of maxEnergy
+	    baseCreature.prototype.reproduceLv = 0.70;
+	    baseCreature.prototype.moveLv = 0;
+	    baseCreature.prototype.boundEnergy = function () {
+	        if (this.energy > this.maxEnergy)
+	            this.energy = this.maxEnergy;
+	    };
+	    baseCreature.prototype.isDead = function () {
+	        return this.energy <= 0;
+	    };
+	    baseCreature.prototype.reproduce = function (neighbors) {
+	        var spots = _.filter(neighbors, function (spot) {
+	            return !spot.creature;
+	        });
+	        if (spots.length) {
+	            var step = spots[_.random(spots.length - 1)];
+	            var coords = step.coords;
+	            var creature = factory.make(this.type);
+	            var successFn = (function () {
+	                this.energy -= this.initialEnergy;
+	                return true;
+	            }).bind(this);
+	            var failureFn = this.wait;
+	            return {
+	                x: coords.x,
+	                y: coords.y,
+	                creature: creature,
+	                successFn: successFn,
+	                failureFn: failureFn
+	            };
+	        }
+	        else
+	            return false;
+	    };
+	    baseCreature.prototype.move = function (neighbors) {
+	        var creature = this;
+	        // first, look for creatures to eat
+	        var spots = _.filter(neighbors, (function (spot) {
+	            return spot.creature ? spot.creature.size < this.size : false;
+	        }).bind(this));
+	        // if there's not enough food, try to move
+	        if (spots.length < this.sustainability) {
+	            spots = _.filter(neighbors, function (spot) {
+	                return !spot.creature;
+	            });
+	        }
+	        // if we've got a spot to move to...
+	        if (spots.length) {
+	            // ...pick one
+	            var step = spots[_.random(spots.length - 1)];
+	            var coords = step.coords;
+	            var successFn = (function () {
+	                var foodEnergy = (step.creature ? step.creature.energy : undefined) * this.efficiency;
+	                // add foodEnergy if eating, subtract 10 if moving
+	                this.energy = this.energy + (foodEnergy || -10);
+	                // clear the original location
+	                return false;
+	            }).bind(this);
+	            return {
+	                x: coords.x,
+	                y: coords.y,
+	                creature: creature,
+	                successFn: successFn
+	            };
+	        }
+	        else
+	            return false;
+	    };
+	    baseCreature.prototype.wait = function () {
+	        this.energy -= 5;
+	        return true;
+	    };
+	    baseCreature.prototype.process = function (neighbors, x, y) {
+	        var step = { x: 0, y: 0, creature: false };
+	        var maxEnergy = this.maxEnergy;
+	        if (this.energy > maxEnergy * this.reproduceLv && this.reproduce) {
+	            step = this.reproduce(neighbors);
+	        }
+	        else if (this.energy > maxEnergy * this.moveLv && this.move) {
+	            step = this.move(neighbors);
+	        }
+	        if (step !== false && step.creature) {
+	            var creature = step.creature;
+	            creature.successFn = step.successFn || creature.wait;
+	            creature.failureFn = step.failureFn || creature.wait;
+	            return {
+	                x: step.x,
+	                y: step.y,
+	                creature: creature,
+	                observed: true
+	            };
+	        }
+	        else
+	            return this.energy !== this.maxEnergy;
+	    };
+	    baseCA.prototype.actionRadius = 1;
+	    baseCA.prototype.boundEnergy = function () { };
+	    baseCA.prototype.isDead = function () { return false; };
+	    baseCA.prototype.process = function (neighbors, x, y) { };
+	    baseCA.prototype.wait = function () { };
+	    // Storage for our creature types
+	    var types = {};
+	    return {
+	        make: function (type, options) {
+	            var CreatureType = types[String(type)];
+	            return (CreatureType ? new CreatureType(options) : false);
+	        },
+	        registerCreature: function (options, init) {
+	            var type = options.type;
+	            // only register classes that fulfill the creature contract
+	            if (typeof type === 'string' && typeof types[type] === 'undefined') {
+	                // set the constructor, including init if it's defined
+	                // These dynamic constructors get their typed prototype directly below.
+	                if (typeof init === 'function') {
+	                    types[type] = (function () {
+	                        this.energy = this.initialEnergy;
+	                        init.call(this);
+	                    });
+	                }
+	                else {
+	                    types[type] = (function () {
+	                        this.energy = this.initialEnergy;
+	                    });
+	                }
+	                var color = options.color || options.colour;
+	                // set the color randomly if none is provided
+	                if (typeof color !== 'object' || color.length !== 3) {
+	                    options.color = [_.random(255), _.random(255), _.random(255)];
+	                }
+	                types[type].prototype = new BaseCreatureConstructor();
+	                types[type].prototype.constructor = types[type];
+	                _.each(options, function (value, key) {
+	                    types[type].prototype[key] = value;
+	                });
+	                types[type].prototype.successFn = types[type].prototype.wait;
+	                types[type].prototype.failureFn = types[type].prototype.wait;
+	                types[type].prototype.energy = options.initialEnergy;
+	                return true;
+	            }
+	            else
+	                return false;
+	        },
+	        registerCA: function (options, init) {
+	            var type = options.type;
+	            if (typeof type === 'string' && typeof types[type] === 'undefined') {
+	                // set the constructor, including init if it's defined
+	                // These dynamic constructors get their typed prototype directly below.
+	                types[type] = (typeof init === 'function' ?
+	                    function () { init.call(this); } :
+	                    function () { });
+	                var color = options.color = options.color || options.colour;
+	                // set the color randomly if none is provided
+	                if (typeof color !== 'object' || color.length !== 3) {
+	                    options.color = [_.random(255), _.random(255), _.random(255)];
+	                }
+	                options.colorFn = options.colorFn || options.colourFn;
+	                types[type].prototype = new BaseCAConstructor();
+	                types[type].prototype.constructor = types[type];
+	                _.each(options, function (value, key) {
+	                    types[type].prototype[key] = value;
+	                });
+	                return true;
+	            }
+	            else
+	                return false;
+	        }
+	    };
+	})();
 
-		/**
-		 * Takes a cell and returns the coordinates of its neighbors
-		 * @param  {int} x0     - x position of cell
-		 * @param  {int} y0     - y position of cell
-		 * @param  {int} xMax   - maximum x index i.e. grid width
-		 * @param  {int} yMax   - maximum x index i.e. grid height
-		 * @param  {int} radius - (default = 1) neighbor radius
-		 * @return {array}      - an array of [x, y] pairs of the neighboring cells
-		 */
-		_.getNeighborCoordsFn = function (xMax, yMax, vonNeumann, periodic) {
-		  if (periodic) {
-		    if (vonNeumann) {
-		      // periodic von neumann
-		      return function (x0, y0, radius) {
-		        var coords = [], x, rX, y, rY, rYMax;
-
-		        for (rX = -radius; rX <= radius; ++rX) {
-		          rYMax = radius - Math.abs(rX);
-		          for (rY = -rYMax; rY <= rYMax; ++rY) {
-		            x = ((rX + x0) % xMax + xMax) % xMax;
-		            y = ((rY + y0) % yMax + yMax) % yMax;
-		            if (x !== x0 || y !== y0) {
-		              coords.push({
-		                x: x,
-		                y: y
-		              });
-		            }
-		          }
-		        }
-
-		        return coords;
-		      };
-		    }
-		    else {
-		      // periodic moore
-		      return function (x0, y0, radius) {
-		        var coords = [], x, xLo, xHi, y, yLo, yHi;
-
-		        xLo = x0 - radius;
-		        yLo = y0 - radius;
-		        xHi = x0 + radius;
-		        yHi = y0 + radius;
-
-		        for (x = xLo; x <= xHi; ++x) {
-		          for (y = yLo; y <= yHi; ++y) {
-		            if (x !== x0 || y !== y0) {
-		              coords.push({
-		                x: (x % xMax + xMax) % xMax,
-		                y: (y % yMax + yMax) % yMax
-		              });
-		            }
-		          }
-		        }
-
-		        return coords;
-		      };
-		    }
-		  } else {
-		    // non-periodic, need to restrict to within [0, max)
-		    xMax -= 1;
-		    yMax -= 1;
-
-		    if (vonNeumann) {
-		      //non-periodic von-neumann
-		      return function (x0, y0, radius) {
-		        var coords = [], x, rX, y, rY, rYMax;
-
-		        for (rX = -radius; rX <= radius; ++rX) {
-		          rYMax = radius - Math.abs(rX);
-		          for (rY = -rYMax; rY <= rYMax; ++rY) {
-		            x = rX + x0;
-		            y = rY + y0;
-		            if (x >= 0 && y >=0 && x <= xMax && y <= yMax && (x !== x0 || y !== y0)) {
-		              coords.push({
-		                x: x,
-		                y: y
-		              });
-		            }
-		          }
-		        }
-
-		        return coords;
-		      };
-		    }
-		    else {
-		      // non-periodic moore
-		      return function (x0, y0, radius) {
-		        var coords = [], x, xLo, xHi, y, yLo, yHi;
-
-		        xLo = Math.max(0, x0 - radius);
-		        yLo = Math.max(0, y0 - radius);
-		        xHi = Math.min(x0 + radius, xMax);
-		        yHi = Math.min(y0 + radius, yMax);
-
-		        for (x = xLo; x <= xHi; ++x)
-		          for (y = yLo; y <= yHi; ++y)
-		            if (x !== x0 || y !== y0)
-		              coords.push({ x: x, y: y });
-
-		        return coords;
-		      };
-		    }
-		  }
-		};
-
-		_.pickRandomWeighted = function (weightedArrays) {
-		  var sum = 0, rand = _.random(100, true);
-		  var cur, i;
-		  for (i = 0, _len = weightedArrays.length; i < _len; i++) {
-		    cur = weightedArrays[i];
-		    sum += cur[1];
-		    if (sum > rand) return cur[0];
-		  } return false;
-		};
-
-		/**
-		 * CommonJS exports
-		 * @type {Object}
-		 */
-		util = _;
-		return util;
+	function display(canvas, grid, cellSize, trails, background) {
+	    var ctx = canvas.getContext('2d');
+	    if (trails && background) {
+	        ctx.fillStyle = 'rgba(' + background + ',' + (1 - trails) + ')';
+	        ctx.fillRect(0, 0, canvas.width, canvas.height);
+	    }
+	    else if (trails) {
+	        throw "Background must also be set for trails";
+	    }
+	    else
+	        ctx.clearRect(0, 0, canvas.width, canvas.height);
+	    _.each(grid, function (column, x) {
+	        _.each(column, function (creature, y) {
+	            if (creature) {
+	                var color = creature.colorFn ?
+	                    creature.colorFn() :
+	                    String(creature.color) + ',' + creature.energy / creature.maxEnergy;
+	                ctx.fillStyle = 'rgba(' + color + ')';
+	                if (creature.character) {
+	                    ctx.fillText(creature.character, x * cellSize, y * cellSize + cellSize);
+	                }
+	                else {
+	                    ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
+	                }
+	            }
+	        });
+	    });
 	}
 
-	var creature;
-	var hasRequiredCreature;
-
-	function requireCreature () {
-		if (hasRequiredCreature) return creature;
-		hasRequiredCreature = 1;
-		var _ = requireUtil();
-
-		// abstract factory that adds a superclass of baseCreature
-		var factory = (function () {
-		  function baseCreature() {
-		    this.age = -1;
-		  }
-		  function baseCA() {
-		    this.age = -1;
-		  }
-
-		  baseCreature.prototype.initialEnergy = 50;
-		  baseCreature.prototype.maxEnergy = 100;
-		  baseCreature.prototype.efficiency = 0.7;
-		  baseCreature.prototype.size = 50;
-		  baseCreature.prototype.actionRadius = 1;
-		  baseCreature.prototype.sustainability = 2;
-		  // used as percentages of maxEnergy
-		  baseCreature.prototype.reproduceLv = 0.70;
-		  baseCreature.prototype.moveLv = 0;
-
-		  baseCreature.prototype.boundEnergy = function() {
-		    if (this.energy > this.maxEnergy)
-		      this.energy = this.maxEnergy;
-		  };
-
-		  baseCreature.prototype.isDead = function() {
-		    return this.energy <= 0;
-		  };
-
-		  baseCreature.prototype.reproduce = function (neighbors) {
-		    var spots = _.filter(neighbors, function (spot) {
-		      return !spot.creature;
-		    });
-
-		    if (spots.length) {
-		      var step = spots[_.random(spots.length - 1)];
-		      var coords = step.coords;
-		      var creature = factory.make(this.type);
-
-		      var successFn = (function () {
-		        this.energy -= this.initialEnergy;
-		        return true;
-		      }).bind(this);
-		      var failureFn = this.wait;
-
-		      return {
-		        x: coords.x,
-		        y: coords.y,
-		        creature: creature,
-		        successFn: successFn,
-		        failureFn: failureFn
-		      };
-		    } else return false;
-		  };
-
-		  baseCreature.prototype.move = function (neighbors) {
-		    var creature = this;
-
-		    // first, look for creatures to eat
-		    var spots = _.filter(neighbors, (function (spot) {
-		      return spot.creature.size < this.size;
-		    }).bind(this));
-
-		    // if there's not enough food, try to move
-		    if (spots.length < this.sustainability) {
-		      spots = _.filter(neighbors, function (spot) {
-		        return !spot.creature;
-		      });
-		    }
-
-		    // if we've got a spot to move to...
-		    if (spots.length) {
-		      // ...pick one
-		      var step = spots[_.random(spots.length - 1)];
-
-		      var coords = step.coords;
-
-		      var successFn = (function () {
-		        var foodEnergy = step.creature.energy * this.efficiency;
-		        // add foodEnergy if eating, subtract 10 if moving
-		        this.energy = this.energy + (foodEnergy || -10);
-		        // clear the original location
-		        return false;
-		      }).bind(this);
-
-		      return {
-		        x: coords.x,
-		        y: coords.y,
-		        creature: creature,
-		        successFn: successFn
-		      };
-		    } else return false;
-		  };
-
-		  baseCreature.prototype.wait = function () {
-		    this.energy -= 5;
-		    return true;
-		  };
-
-		  baseCreature.prototype.process = function (neighbors, x, y) {
-		    var step = {};
-		    var maxEnergy = this.maxEnergy;
-
-		    if (this.energy > maxEnergy * this.reproduceLv && this.reproduce) {
-		      step = this.reproduce(neighbors);
-		    } else if (this.energy > maxEnergy * this.moveLv && this.move) {
-		      step = this.move(neighbors);
-		    }
-
-		    var creature = step.creature;
-
-		    if (creature) {
-		      creature.successFn = step.successFn || creature.wait;
-		      creature.failureFn = step.failureFn || creature.wait;
-
-		      return {
-		        x: step.x,
-		        y: step.y,
-		        creature: creature,
-		        observed: true
-		      };
-		    } else return this.energy !== this.maxEnergy;
-		  };
-
-		  baseCA.prototype.actionRadius = 1;
-		  baseCA.prototype.boundEnergy = function () {};
-		  baseCA.prototype.isDead = function () { return false; };
-		  baseCA.prototype.process = function (neighbors, x, y) {};
-		  baseCA.prototype.wait = function () {};
-
-		  // Storage for our creature types
-		  var types = {};
-
-		  return {
-		    make: function (type, options) {
-		      var Creature = types[type];
-		      return (Creature ? new Creature(options) : false);
-		    },
-
-		    registerCreature: function (options, init) {
-		      // required attributes
-		      var type = options.type;
-		      // only register classes that fulfill the creature contract
-		      if (typeof type === 'string' && typeof types[type] === 'undefined') {
-		        // set the constructor, including init if it's defined
-		        if (typeof init === 'function') {
-		          types[type] = function () {
-		            this.energy = this.initialEnergy;
-		            init.call(this);
-		          };
-		        } else {
-		          types[type] = function () {
-		            this.energy = this.initialEnergy;
-		          };
-		        }
-
-		        var color = options.color || options.colour;
-		        // set the color randomly if none is provided
-		        if (typeof color !== 'object' || color.length !== 3) {
-		          options.color = [_.random(255), _.random(255), _.random(255)];
-		        }
-
-		        types[type].prototype = new baseCreature();
-		        types[type].prototype.constructor = types[type];
-
-		        _.each(options, function(value, key) {
-		          types[type].prototype[key] = value;
-		        });
-
-		        types[type].prototype.successFn = types[type].prototype.wait;
-		        types[type].prototype.failureFn = types[type].prototype.wait;
-		        types[type].prototype.energy = options.initialEnergy;
-
-		        return true;
-		      } else return false;
-		    },
-
-		    registerCA: function (options, init) {
-		      // required attributes
-		      var type = options.type;
-		      // only register classes that fulfill the creature contract
-		      if (typeof type === 'string' && typeof types[type] === 'undefined') {
-		        // set the constructor, including init if it's defined
-		        types[type] = typeof init === 'function' ?
-		           function () { init.call(this); } :
-		           function () {};
-
-		        var color = options.color = options.color || options.colour;
-		        // set the color randomly if none is provided
-		        if (typeof color !== 'object' || color.length !== 3) {
-		          options.color = [_.random(255), _.random(255), _.random(255)];
-		        }
-
-		        options.colorFn = options.colorFn || options.colourFn;
-
-		        types[type].prototype = new baseCA();
-		        types[type].prototype.constructor = types[type];
-
-		        _.each(options, function(value, key) {
-		          types[type].prototype[key] = value;
-		        });
-
-		        return true;
-		      } else return false;
-		    }
-		  };
-		})();
-
-		creature = factory;
-		return creature;
-	}
-
-	var display;
-	var hasRequiredDisplay;
-
-	function requireDisplay () {
-		if (hasRequiredDisplay) return display;
-		hasRequiredDisplay = 1;
-		var _ = requireUtil();
-
-		display = function (canvas, grid, cellSize, trails, background) {
-		  var ctx = canvas.getContext('2d');
-		  if (trails && background) {
-		    ctx.fillStyle = 'rgba(' + background + ',' + (1 - trails) + ')';
-		    ctx.fillRect(0, 0, canvas.width, canvas.height);
-		  } else if (trails) {
-		    throw "Background must also be set for trails";
-		  } else ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-		  _.each(grid, function (column, x) {
-		    _.each(column, function (creature, y) {
-		      if (creature) {
-		        var color = creature.colorFn ?
-		          creature.colorFn() :
-		          creature.color + ',' + creature.energy / creature.maxEnergy;
-
-		        ctx.fillStyle = 'rgba(' + color + ')';
-
-		        if (creature.character) {
-		          ctx.fillText(creature.character, x * cellSize, y * cellSize + cellSize);
-		        } else {
-		          ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
-		        }
-		      }
-		    });
-		  });
-		};
-		return display;
-	}
-
-	var dom;
-	var hasRequiredDom;
-
-	function requireDom () {
-		if (hasRequiredDom) return dom;
-		hasRequiredDom = 1;
-		// Creates an HD canvas element on page and
-		// returns a reference to the element
-		var createCanvasElement = function (width, height, cellSize, id, insertAfter, background) {
-		  width *= cellSize;
-		  height *= cellSize;
-
-		  // Creates a scaled-up canvas based on the device's
-		  // resolution, then displays it properly using styles
-		  function createHDCanvas () {
-		    var canvas = document.createElement('canvas');
-		    var ctx = canvas.getContext('2d');
-
-		    // Creates a dummy canvas to test device's pixel ratio
-		    var ratio = (function () {
-		      var ctx = document.createElement('canvas').getContext('2d');
-		      var dpr = window.devicePixelRatio || 1;
-		      var bsr = ctx.webkitBackingStorePixelRatio ||
-		                ctx.mozBackingStorePixelRatio ||
-		                ctx.msBackingStorePixelRatio ||
-		                ctx.oBackingStorePixelRatio ||
-		                ctx.backingStorePixelRatio || 1;
-		      return dpr / bsr;
-		    })();
-
-		    canvas.width = width * ratio;
-		    canvas.height = height * ratio;
-		    canvas.style.width = width + 'px';
-		    canvas.style.height = height + 'px';
-		    ctx.scale(ratio, ratio);
-		    ctx.font = 'bold ' + cellSize + 'px Arial';
-
-		    if (id) canvas.id = id;
-		    if (background) canvas.style.background = 'rgb(' + background + ')';
-
-		    return canvas;
-		  }
-
-		  var canvas = createHDCanvas();
-
-		  if (insertAfter) insertAfter.parentNode.insertBefore(canvas, insertAfter.nextSibling);
-		  else document.body.appendChild(canvas);
-
-		  return canvas;
-		};
-
-		dom = {
-		  createCanvasElement: createCanvasElement
-		};
-		return dom;
-	}
-
-	var terrarium;
-	var hasRequiredTerrarium;
-
-	function requireTerrarium () {
-		if (hasRequiredTerrarium) return terrarium;
-		hasRequiredTerrarium = 1;
-		var _ = requireUtil();
-		var factory = requireCreature();
-		var display = requireDisplay();
-		var dom = requireDom();
-
-		/**
-		 * Terrarium constructor function
-		 * @param {int} width             number of cells in the x-direction
-		 * @param {int} height            number of cells in the y-direction
-		 * @param {object} options
-		 *   @param {string} id             id assigned to the generated canvas
-		 *   @param {int} cellSize          pixel width of each cell (default 10)
-		 *   @param {string} insertAfter    id of the element to insert the canvas after
-		 *   @param {float} trails          a number from [0, 1] indicating whether trails should
-		 *                                    be drawn (0 = no trails, 1 = neverending trails)
-		 *                                    "background" option is required if trails is set
-		 *   @param {array} background      an RGB triplet for the canvas' background
-		 */
-		function Terrarium (width, height, options) {
-		  var cellSize, neighborhood;
-
-		  // cast width and height to integers
-		  width = Math.ceil(width);
-		  height = Math.ceil(height);
-
-		  // set default options
-		  options = options || {};
-		  cellSize = options.cellSize || 10;
-		  neighborhood = options.neighborhood || options.neighbourhood;
-		  if (typeof neighborhood === 'string') neighborhood = neighborhood.toLowerCase();
-
-		  this.width = width;
-		  this.height = height;
-		  this.cellSize = cellSize;
-		  this.trails = options.trails;
-		  this.background = options.background;
-		  this.canvas = dom.createCanvasElement(width, height, cellSize, options.id, options.insertAfter, this.background);
-		  this.grid = [];
-		  this.nextFrame = false;
-		  this.hasChanged = false;
-		  this.getNeighborCoords = _.getNeighborCoordsFn(width, height, neighborhood === 'vonneumann', options.periodic);
-		}
-
-		/**
-		 * Create a grid and fill it by using a function, 2-d array, or uniform type
-		 * @param  {*} content  if  function, fill grid according to fn(x, y)
-		 *                        if array, fill grid cells with the corresponding creatureType
-		 *                        if string, fill grid with that creatureType
-		 *                        otherwise, create empty grid
-		 * @return {grid}       a grid adhering to the above rules
-		 */
-		Terrarium.prototype.makeGrid = function (content) {
-		  var grid = [], type = typeof content;
-		  for (var x = 0, _w = this.width; x < _w; x++) {
-		    grid.push([]);
-		    for (var y = 0, _h = this.height; y < _h; y++) {
-		      grid[x].push(factory.make(
-		        type === 'function' ? content(x, y) :
-		        type === 'object' && content.length ? (content[y] || [])[x] :
-		        type === 'string' ? content :
-		        undefined
-		      ));
-		    }
-		  } return grid;
-		};
-
-		/**
-		 * Create a grid and fill it randomly with a set creature distribution
-		 * @param  {array} distribution   an array of arrays of the form [string 'creatureName', float fillPercent]
-		 */
-		Terrarium.prototype.makeGridWithDistribution = function (distribution) {
-		  var grid = [];
-		  for (var x = 0, _w = this.width; x < _w; x++) {
-		    grid.push([]);
-		    for (var y = 0, _h = this.height; y < _h; y++) {
-		      grid[x].push(factory.make(_.pickRandomWeighted(distribution)));
-		    }
-		  } return grid;
-		};
-
-		/**
-		 * Returns the next step of the simulation
-		 * @param  {} steps   the number of steps to run through before returning
-		 * @return {grid}     a new grid after <steps> || 1 steps
-		 */
-		Terrarium.prototype.step = function (steps) {
-		  function copyAndRemoveInner (origCreature) {
-		    if (origCreature) {
-		      var copy = _.assign(new (origCreature.constructor)(), origCreature);
-		      var dead = copy && copy.isDead();
-		      if (dead && !self.hasChanged) self.hasChanged = true;
-		      copy.age++;
-
-		      return !dead ? copy : false;
-		    } else return false;
-		  }
-
-		  function copyAndRemove (origCols) {
-		    return _.map(origCols, copyAndRemoveInner);
-		  }
-
-		  // TODO: Switch coords to just x and y to be consistent w/ pickWinnerInner
-		  function zipCoordsWithNeighbors (coords) {
-		    return {
-		      coords: coords,
-		      creature: oldGrid[coords.x][coords.y]
-		    };
-		  }
-
-		  function processLoser (loser) {
-		    var loserCreature = loser.creature;
-		    if (loserCreature) {
-		      loserCreature.failureFn();
-		      loserCreature.boundEnergy();
-		    } else {
-		      loser.wait();
-		      loser.boundEnergy();
-		    }
-		  }
-
-		  function processCreaturesInner (creature, x, y) {
-		    if (creature) {
-		      var neighbors = _.map(
-		        self.getNeighborCoords(x, y, creature.actionRadius),
-		        zipCoordsWithNeighbors
-		      );
-		      var result = creature.process(neighbors, x, y);
-		      if (typeof result === 'object') {
-		        var eigenColumn = eigenGrid[result.x];
-		        var returnedCreature = result.creature;
-		        var returnedY = result.y;
-
-		        if (!eigenColumn[returnedY]) eigenColumn[returnedY] = [];
-
-		        eigenColumn[returnedY].push({
-		          x: x,
-		          y: y,
-		          creature: returnedCreature
-		        });
-		        if (!self.hasChanged && result.observed) self.hasChanged = true;
-		      } else {
-		        if (result && !self.hasChanged) self.hasChanged = true;
-		        processLoser(creature);
-		      }
-		    }
-		  }
-
-		  function processCreatures (column, x) {
-		    _.each(column, function (creature, y) { processCreaturesInner(creature, x, y); });
-		  }
-
-		  function pickWinnerInner (superposition, x, y) {
-		    if (superposition) {
-		      var winner = superposition.splice(_.random(superposition.length - 1), 1)[0];
-		      var winnerCreature = winner.creature;
-
-		      // clear the original creature's square if successFn returns false
-		      if (!winnerCreature.successFn()) {
-		        newGrid[winner.x][winner.y] = false;
-		      }
-		      // TODO: so many calls to this. Can we just run it once at the start of a step?
-		      winnerCreature.boundEnergy();
-
-		      // put the winner in its rightful place
-		      newGrid[x][y] = winnerCreature;
-
-		      // ...and call wait() on the losers. We can do this without
-		      // affecting temporal consistency because all callbacks have
-		      // already been created with prior conditions
-		      _.each(superposition, processLoser);
-		    }
-		  }
-
-		  function pickWinner (column, x) {
-		    _.each(column, function (superposition, y) { pickWinnerInner(superposition, x, y); });
-		  }
-
-		  var self = this;
-		  this.width;
-		  this.height;
-		  var oldGrid = this.grid, newGrid, eigenGrid;
-
-		  if (typeof steps !== 'number') steps = 1;
-
-		  while (steps--) {
-		    this.hasChanged = false;
-
-		    oldGrid = newGrid ? _.clone(newGrid) : this.grid;
-
-		    // copy the old grid & remove dead creatures
-		    newGrid = _.map(oldGrid, copyAndRemove);
-
-		    // create an empty grid to hold creatures competing for the same square
-		    eigenGrid = this.makeGrid();
-
-		    // Add each creature's intended destination to the eigenGrid
-		    _.each(newGrid, processCreatures);
-
-		    // Choose a winner from each of the eigenGrid's superpositions
-		    _.each(eigenGrid, pickWinner);
-
-		    if (!this.hasChanged) return false;
-		  }
-
-		  return newGrid;
-		};
-
-		/**
-		 * Updates the canvas to reflect the current grid
-		 */
-		Terrarium.prototype.draw = function () {
-		  display(this.canvas, this.grid, this.cellSize, this.trails, this.background);
-		};
-
-		/**
-		 * Starts animating the simulation. Can be called with only a function.
-		 * @param  {int}   steps   the simulation will stop after <steps> steps if specified
-		 * @param  {Function} fn   called as a callback once the animation finishes
-		 */
-		Terrarium.prototype.animate = function (steps, fn) {
-		  function tick () {
-		    var grid = self.step();
-		    if (grid) {
-		      self.grid = grid;
-		      self.draw();
-		      if (++i !== steps) return self.nextFrame = requestAnimationFrame(tick);
-		    } // if grid hasn't changed || reached last step
-		    self.nextFrame = false;
-		    if (fn) fn();
-		  }
-
-		  if (typeof steps === 'function') {
-		    fn = steps;
-		    steps = null;
-		  }
-
-		  if (!this.nextFrame) {
-		    var i = 0;
-		    var self = this;
-		    self.nextFrame = requestAnimationFrame(tick);
-		  }
-		};
-
-		/**
-		 * Stops a currently running animation
-		 */
-		Terrarium.prototype.stop = function () {
-		  cancelAnimationFrame(this.nextFrame);
-		  this.nextFrame = false;
-		};
-
-		/**
-		 * Stops any currently running animation and cleans up the DOM
-		 */
-		Terrarium.prototype.destroy = function () {
-		  var canvas = this.canvas;
-		  this.stop();
-		  canvas.parentNode.removeChild(canvas);
-		};
-
-		terrarium = Terrarium;
-		return terrarium;
-	}
-
-	var main$1;
-	var hasRequiredMain;
-
-	function requireMain () {
-		if (hasRequiredMain) return main$1;
-		hasRequiredMain = 1;
-		var Terrarium = requireTerrarium();
-		var factory = requireCreature();
-
-		main$1 = {
-		  Terrarium: Terrarium,
-		  registerCreature: factory.registerCreature,
-		  registerCA: factory.registerCA
-		};
-		return main$1;
-	}
-
-	var mainExports = requireMain();
-	var main = /*@__PURE__*/getDefaultExportFromCjs(mainExports);
-
-	return main;
+	var createCanvasElement = function (width, height, cellSize, id, insertAfter, background) {
+	    width *= cellSize;
+	    height *= cellSize;
+	    // Creates a scaled-up canvas based on the device's
+	    // resolution, then displays it properly using styles
+	    function createHDCanvas() {
+	        var canvas = document.createElement('canvas');
+	        var ctx = canvas.getContext('2d');
+	        // Creates a dummy canvas to test device's pixel ratio
+	        var ratio = (function () {
+	            var ctx = document.createElement('canvas').getContext('2d');
+	            var dpr = window.devicePixelRatio || 1;
+	            var bsr = ctx.webkitBackingStorePixelRatio ||
+	                ctx.mozBackingStorePixelRatio ||
+	                ctx.msBackingStorePixelRatio ||
+	                ctx.oBackingStorePixelRatio ||
+	                ctx.backingStorePixelRatio || 1;
+	            return dpr / bsr;
+	        })();
+	        canvas.width = width * ratio;
+	        canvas.height = height * ratio;
+	        canvas.style.width = width + 'px';
+	        canvas.style.height = height + 'px';
+	        ctx.scale(ratio, ratio);
+	        ctx.font = 'bold ' + cellSize + 'px Arial';
+	        if (id)
+	            canvas.id = id;
+	        if (background)
+	            canvas.style.background = 'rgb(' + background + ')';
+	        return canvas;
+	    }
+	    var canvas = createHDCanvas();
+	    if (insertAfter)
+	        insertAfter.parentNode.insertBefore(canvas, insertAfter.nextSibling);
+	    else
+	        document.body.appendChild(canvas);
+	    return canvas;
+	};
+
+	/**
+	 * Terrarium constructor function
+	 * @param {int} width             number of cells in the x-direction
+	 * @param {int} height            number of cells in the y-direction
+	 * @param {object} options
+	 *   @param {string} id             id assigned to the generated canvas
+	 *   @param {int} cellSize          pixel width of each cell (default 10)
+	 *   @param {string} insertAfter    id of the element to insert the canvas after
+	 *   @param {float} trails          a number from [0, 1] indicating whether trails should
+	 *                                    be drawn (0 = no trails, 1 = neverending trails)
+	 *                                    "background" option is required if trails is set
+	 *   @param {array} background      an RGB triplet for the canvas' background
+	 */
+	const Terrarium = function (width, height, options) {
+	    var cellSize, neighborhood;
+	    // cast width and height to integers
+	    width = Math.ceil(width);
+	    height = Math.ceil(height);
+	    // set default options
+	    options = options || {};
+	    cellSize = options.cellSize || 10;
+	    neighborhood = options.neighborhood || options.neighbourhood;
+	    if (typeof neighborhood === 'string')
+	        neighborhood = neighborhood.toLowerCase();
+	    this.width = width;
+	    this.height = height;
+	    this.cellSize = cellSize;
+	    this.trails = options.trails;
+	    this.background = options.background;
+	    this.canvas = createCanvasElement(width, height, cellSize, options.id, options.insertAfter, this.background);
+	    this.grid = [];
+	    this.nextFrame = false;
+	    this.hasChanged = false;
+	    this.getNeighborCoords = _.getNeighborCoordsFn(width, height, neighborhood === 'vonneumann', options.periodic);
+	};
+	/**
+	 * Create a grid and fill it by using a function, 2-d array, or uniform type
+	 * @param  {*} content  if  function, fill grid according to fn(x, y)
+	 *                        if array, fill grid cells with the corresponding creatureType
+	 *                        if string, fill grid with that creatureType
+	 *                        otherwise, create empty grid
+	 * @return {grid}       a grid adhering to the above rules
+	 */
+	Terrarium.prototype.makeGrid = function (content) {
+	    var grid = [];
+	    for (var x = 0, _w = this.width; x < _w; x++) {
+	        grid.push([]);
+	        for (var y = 0, _h = this.height; y < _h; y++) {
+	            grid[x].push(factory.make(typeof content === 'function' ? content(x, y) :
+	                typeof content === 'object' && content.length ? (content[y] || [])[x] :
+	                    typeof content === 'string' ? content :
+	                        undefined));
+	        }
+	    }
+	    return grid;
+	};
+	/**
+	 * Create a grid and fill it randomly with a set creature distribution
+	 * @param  {array} distribution   an array of arrays of the form [string 'creatureName', float fillPercent]
+	 */
+	Terrarium.prototype.makeGridWithDistribution = function (distribution) {
+	    var grid = [];
+	    for (var x = 0, _w = this.width; x < _w; x++) {
+	        grid.push([]);
+	        for (var y = 0, _h = this.height; y < _h; y++) {
+	            grid[x].push(factory.make(_.pickRandomWeighted(distribution)));
+	        }
+	    }
+	    return grid;
+	};
+	/**
+	 * Returns the next step of the simulation
+	 * @param  {} steps   the number of steps to run through before returning
+	 * @return {grid}     a new grid after <steps> || 1 steps
+	 */
+	Terrarium.prototype.step = function (steps) {
+	    function copyAndRemoveInner(origCreature) {
+	        if (origCreature) {
+	            // Registered cells retain their concrete constructors when copied.
+	            const CreatureConstructor = origCreature.constructor;
+	            var copy = _.assign(new CreatureConstructor(), origCreature);
+	            var dead = copy && copy.isDead();
+	            if (dead && !self.hasChanged)
+	                self.hasChanged = true;
+	            copy.age++;
+	            return !dead ? copy : false;
+	        }
+	        else
+	            return false;
+	    }
+	    function copyAndRemove(origCols) {
+	        return _.map(origCols, copyAndRemoveInner);
+	    }
+	    // TODO: Switch coords to just x and y to be consistent w/ pickWinnerInner
+	    function zipCoordsWithNeighbors(coords) {
+	        return {
+	            coords: coords,
+	            creature: oldGrid[coords.x][coords.y]
+	        };
+	    }
+	    function processLoser(loser) {
+	        // Losers are either creatures or action records; preserve the legacy property probe.
+	        var action = loser;
+	        var loserCreature = action.creature;
+	        if (loserCreature) {
+	            loserCreature.failureFn();
+	            loserCreature.boundEnergy();
+	        }
+	        else {
+	            var creature = loser;
+	            creature.wait();
+	            creature.boundEnergy();
+	        }
+	    }
+	    function processCreaturesInner(creature, x, y) {
+	        if (creature) {
+	            var neighbors = _.map(self.getNeighborCoords(x, y, creature.actionRadius), zipCoordsWithNeighbors);
+	            var result = creature.process(neighbors, x, y);
+	            if (typeof result === 'object') {
+	                var eigenColumn = eigenGrid[result.x];
+	                var returnedCreature = result.creature;
+	                var returnedY = result.y;
+	                var contenders = eigenColumn[returnedY];
+	                if (!contenders) {
+	                    contenders = [];
+	                    eigenColumn[returnedY] = contenders;
+	                }
+	                contenders.push({
+	                    x: x,
+	                    y: y,
+	                    creature: returnedCreature
+	                });
+	                if (!self.hasChanged && result.observed)
+	                    self.hasChanged = true;
+	            }
+	            else {
+	                if (result && !self.hasChanged)
+	                    self.hasChanged = true;
+	                processLoser(creature);
+	            }
+	        }
+	    }
+	    function processCreatures(column, x) {
+	        _.each(column, function (creature, y) { processCreaturesInner(creature, x, y); });
+	    }
+	    function pickWinnerInner(superposition, x, y) {
+	        if (superposition) {
+	            var winner = superposition.splice(_.random(superposition.length - 1), 1)[0];
+	            // Actions in this grid were emitted by live creatures.
+	            var winnerCreature = winner.creature;
+	            // clear the original creature's square if successFn returns false
+	            if (!winnerCreature.successFn()) {
+	                newGrid[winner.x][winner.y] = false;
+	            }
+	            // TODO: so many calls to this. Can we just run it once at the start of a step?
+	            winnerCreature.boundEnergy();
+	            // put the winner in its rightful place
+	            newGrid[x][y] = winnerCreature;
+	            // ...and call wait() on the losers. We can do this without
+	            // affecting temporal consistency because all callbacks have
+	            // already been created with prior conditions
+	            _.each(superposition, processLoser);
+	        }
+	    }
+	    function pickWinner(column, x) {
+	        _.each(column, function (superposition, y) {
+	            pickWinnerInner(superposition, x, y);
+	        });
+	    }
+	    var self = this;
+	    var oldGrid = this.grid, newGrid, eigenGrid;
+	    if (typeof steps !== 'number')
+	        steps = 1;
+	    while (steps--) {
+	        this.hasChanged = false;
+	        oldGrid = newGrid ? _.clone(newGrid) : this.grid;
+	        // copy the old grid & remove dead creatures
+	        newGrid = _.map(oldGrid, copyAndRemove);
+	        // create an empty grid to hold creatures competing for the same square
+	        // This grid is reused as a matrix of contender lists during the simulation step.
+	        eigenGrid = this.makeGrid();
+	        // Add each creature's intended destination to the eigenGrid
+	        _.each(newGrid, processCreatures);
+	        // Choose a winner from each of the eigenGrid's superpositions
+	        _.each(eigenGrid, pickWinner);
+	        if (!this.hasChanged)
+	            return false;
+	    }
+	    return newGrid;
+	};
+	/**
+	 * Updates the canvas to reflect the current grid
+	 */
+	Terrarium.prototype.draw = function () {
+	    display(this.canvas, this.grid, this.cellSize, this.trails, this.background);
+	};
+	/**
+	 * Starts animating the simulation. Can be called with only a function.
+	 * @param  {int}   steps   the simulation will stop after <steps> steps if specified
+	 * @param  {Function} fn   called as a callback once the animation finishes
+	 */
+	Terrarium.prototype.animate = function (steps, fn) {
+	    function tick() {
+	        var grid = self.step();
+	        if (grid) {
+	            self.grid = grid;
+	            self.draw();
+	            if (++i !== steps)
+	                return self.nextFrame = requestAnimationFrame(tick);
+	        } // if grid hasn't changed || reached last step
+	        self.nextFrame = false;
+	        if (fn)
+	            fn();
+	    }
+	    if (typeof steps === 'function') {
+	        fn = steps;
+	        steps = null;
+	    }
+	    if (!this.nextFrame) {
+	        var i = 0;
+	        var self = this;
+	        self.nextFrame = requestAnimationFrame(tick);
+	    }
+	};
+	/**
+	 * Stops a currently running animation
+	 */
+	Terrarium.prototype.stop = function () {
+	    cancelAnimationFrame(this.nextFrame || 0);
+	    this.nextFrame = false;
+	};
+	/**
+	 * Stops any currently running animation and cleans up the DOM
+	 */
+	Terrarium.prototype.destroy = function () {
+	    var canvas = this.canvas;
+	    this.stop();
+	    canvas.parentNode.removeChild(canvas);
+	};
+
+	const registerCreature = factory.registerCreature;
+	const registerCA = factory.registerCA;
+
+	exports.Terrarium = Terrarium;
+	exports.registerCA = registerCA;
+	exports.registerCreature = registerCreature;
 
 }));
