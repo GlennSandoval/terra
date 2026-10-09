@@ -1,4 +1,3 @@
-import _ from './util';
 import type {
   Creature,
   CreatureAction,
@@ -47,12 +46,12 @@ const factory: CreatureFactory = (() => {
   };
 
   baseCreature.prototype.reproduce = function (this: Creature, neighbors: Neighbor[]) {
-    const spots = _.filter(neighbors, (spot: Neighbor) => {
+    const spots = neighbors.filter((spot: Neighbor) => {
       return !spot.creature;
     });
 
     if (spots.length) {
-      const step = spots[_.random(spots.length - 1)];
+      const step = spots[Math.floor(Math.random() * spots.length)];
       const coords = step.coords;
       const creature = factory.make(this.type);
 
@@ -74,8 +73,7 @@ const factory: CreatureFactory = (() => {
 
   baseCreature.prototype.move = function (this: Creature, neighbors: Neighbor[]) {
     // first, look for creatures to eat
-    let spots = _.filter(
-      neighbors,
+    let spots = neighbors.filter(
       function (this: Creature, spot: Neighbor) {
         return spot.creature
           ? spot.creature.size !== undefined &&
@@ -87,7 +85,7 @@ const factory: CreatureFactory = (() => {
 
     // if there's not enough food, try to move
     if (this.sustainability !== undefined && spots.length < this.sustainability) {
-      spots = _.filter(neighbors, (spot: Neighbor) => {
+      spots = neighbors.filter((spot: Neighbor) => {
         return !spot.creature;
       });
     }
@@ -95,7 +93,7 @@ const factory: CreatureFactory = (() => {
     // if we've got a spot to move to...
     if (spots.length) {
       // ...pick one
-      const step = spots[_.random(spots.length - 1)];
+      const step = spots[Math.floor(Math.random() * spots.length)];
 
       const coords = step.coords;
 
@@ -205,14 +203,18 @@ const factory: CreatureFactory = (() => {
         const color = options.color || options.colour;
         // set the color randomly if none is provided
         if (typeof color !== 'object' || color.length !== 3) {
-          options.color = [_.random(255), _.random(255), _.random(255)];
+          options.color = [
+            Math.floor(Math.random() * 256),
+            Math.floor(Math.random() * 256),
+            Math.floor(Math.random() * 256),
+          ];
         }
 
         types[type].prototype = new BaseCreatureConstructor();
         types[type].prototype.constructor = types[type];
 
-        _.each(options, (value: unknown, key: string) => {
-          types[type].prototype[key] = value;
+        Object.keys(options).forEach((key) => {
+          types[type].prototype[key] = options[key];
         });
 
         types[type].prototype.successFn = types[type].prototype.wait;
@@ -236,7 +238,11 @@ const factory: CreatureFactory = (() => {
         const color = (options.color = options.color || options.colour);
         // set the color randomly if none is provided
         if (typeof color !== 'object' || color.length !== 3) {
-          options.color = [_.random(255), _.random(255), _.random(255)];
+          options.color = [
+            Math.floor(Math.random() * 256),
+            Math.floor(Math.random() * 256),
+            Math.floor(Math.random() * 256),
+          ];
         }
 
         options.colorFn = options.colorFn || options.colourFn;
@@ -244,8 +250,8 @@ const factory: CreatureFactory = (() => {
         types[type].prototype = new BaseCAConstructor();
         types[type].prototype.constructor = types[type];
 
-        _.each(options, (value: unknown, key: string) => {
-          types[type].prototype[key] = value;
+        Object.keys(options).forEach((key) => {
+          types[type].prototype[key] = options[key];
         });
 
         return true;

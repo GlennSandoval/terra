@@ -1,4 +1,3 @@
-import _ from './util';
 import type {Color, Creature, Grid} from './types';
 
 export default function display(
@@ -17,8 +16,8 @@ export default function display(
     throw 'Background must also be set for trails';
   } else ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  _.each(grid, (column: Array<Creature | false>, x: number) => {
-    _.each(column, (creature: Creature | false, y: number) => {
+  grid.forEach((column: Array<Creature | false>, x: number) => {
+    column.forEach((creature: Creature | false, y: number) => {
       if (creature) {
         const color = creature.colorFn
           ? creature.colorFn()

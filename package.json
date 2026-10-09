@@ -34,7 +34,6 @@
     "typescript": "^5.9.3"
   },
   "dependencies": {
-    "lodash": "~2.4.1",
     "seedrandom": "^3.0.5"
   }
 }

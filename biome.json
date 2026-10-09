@@ -6,7 +6,7 @@
     "useIgnoreFile": true
   },
   "files": {
-    "includes": ["**", "!!dist", "!!terra.js", "!!**/*.min.js", "!!lodash_custom"]
+    "includes": ["**", "!!dist", "!!terra.js", "!!**/*.min.js"]
   },
   "formatter": {
     "enabled": true,

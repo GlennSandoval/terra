@@ -59,20 +59,3 @@ export interface CreatureOptions {
 export type CreatureInitializer = (this: Creature) => void;
 export type WeightedCreature = [type: string, weight: number];
 export type NeighborCoordinates = (x: number, y: number, radius: number) => Coordinate[];
-
-export interface LodashSubset {
-  random(max: number, floating?: boolean): number;
-  filter<T>(collection: T[], predicate: (value: T) => unknown): T[];
-  each<T>(collection: T[], iteratee: (value: T, index: number) => unknown): void;
-  each<T>(collection: Record<string, T>, iteratee: (value: T, key: string) => unknown): void;
-  map<T, Result>(collection: T[], iteratee: (value: T, index: number) => Result): Result[];
-  assign<T extends object>(target: T, source: object): T;
-  clone<T extends object>(value: T): T;
-  getNeighborCoordsFn(
-    xMax: number,
-    yMax: number,
-    vonNeumann: boolean,
-    periodic: boolean | undefined,
-  ): NeighborCoordinates;
-  pickRandomWeighted(weightedArrays: WeightedCreature[]): string | false;
-}

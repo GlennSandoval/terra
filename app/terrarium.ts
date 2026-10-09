@@ -1,4 +1,4 @@
-import _ from './util';
+import {getNeighborCoordsFn, pickRandomWeighted} from './util';
 import factory from './creature';
 import display from './display';
 import {createCanvasElement} from './dom';
@@ -98,7 +98,7 @@ const Terrarium: TerrariumConstructor = function (
   this.grid = [];
   this.nextFrame = false;
   this.hasChanged = false;
-  this.getNeighborCoords = _.getNeighborCoordsFn(
+  this.getNeighborCoords = getNeighborCoordsFn(
     width,
     height,
     neighborhood === 'vonneumann',
@@ -154,7 +154,7 @@ Terrarium.prototype.makeGridWithDistribution = function (
     grid.push([]);
     const height = this.height;
     for (let y = 0; y < height; y++) {
-      grid[x].push(factory.make(_.pickRandomWeighted(distribution)));
+      grid[x].push(factory.make(pickRandomWeighted(distribution)));
     }
   }
   return grid;
@@ -174,7 +174,9 @@ Terrarium.prototype.step = function (
     if (origCreature) {
       // Registered cells retain their concrete constructors when copied.
       const CreatureConstructor = origCreature.constructor as unknown as new () => Creature;
-      const copy = _.assign(new CreatureConstructor(), origCreature);
+      const copy = Object.assign(new CreatureConstructor(), origCreature) as Creature & {
+        age: number;
+      };
       const dead = copy.isDead();
       if (dead && !self.hasChanged) self.hasChanged = true;
       copy.age++;
@@ -184,7 +186,7 @@ Terrarium.prototype.step = function (
   }
 
   function copyAndRemove(origCols: Array<Creature | false>): Array<Creature | false> {
-    return _.map(origCols, copyAndRemoveInner);
+    return origCols.map(copyAndRemoveInner);
   }
 
   // TODO: Switch coords to just x and y to be consistent w/ pickWinnerInner
@@ -212,10 +214,9 @@ Terrarium.prototype.step = function (
 
   function processCreaturesInner(creature: Creature | false, x: number, y: number): void {
     if (creature) {
-      const neighbors = _.map(
-        self.getNeighborCoords(x, y, creature.actionRadius),
-        zipCoordsWithNeighbors,
-      );
+      const neighbors = self
+        .getNeighborCoords(x, y, creature.actionRadius)
+        .map(zipCoordsWithNeighbors);
       const result = creature.process(neighbors, x, y);
       if (typeof result === 'object') {
         const eigenColumn = eigenGrid[result.x];
@@ -241,14 +242,14 @@ Terrarium.prototype.step = function (
   }
 
   function processCreatures(column: Array<Creature | false>, x: number): void {
-    _.each(column, (creature: Creature | false, y: number) => {
+    column.forEach((creature: Creature | false, y: number) => {
       processCreaturesInner(creature, x, y);
     });
   }
 
   function pickWinnerInner(superposition: CreatureAction[] | false, x: number, y: number): void {
     if (superposition) {
-      const winner = superposition.splice(_.random(superposition.length - 1), 1)[0];
+      const winner = superposition.splice(Math.floor(Math.random() * superposition.length), 1)[0];
       // Actions in this grid were emitted by live creatures.
       const winnerCreature = winner.creature as Creature;
       const nextGrid = newGrid;
@@ -269,12 +270,12 @@ Terrarium.prototype.step = function (
       // ...and call wait() on the losers. We can do this without
       // affecting temporal consistency because all callbacks have
       // already been created with prior conditions
-      _.each(superposition, processLoser);
+      superposition.forEach(processLoser);
     }
   }
 
   function pickWinner(column: Array<CreatureAction[] | false>, x: number): void {
-    _.each(column, (superposition: CreatureAction[] | false, y: number) => {
+    column.forEach((superposition: CreatureAction[] | false, y: number) => {
       pickWinnerInner(superposition, x, y);
     });
   }
@@ -288,20 +289,20 @@ Terrarium.prototype.step = function (
   while (steps--) {
     this.hasChanged = false;
 
-    oldGrid = newGrid ? _.clone(newGrid) : this.grid;
+    oldGrid = newGrid ? newGrid.slice() : this.grid;
 
     // copy the old grid & remove dead creatures
-    newGrid = _.map(oldGrid, copyAndRemove);
+    newGrid = oldGrid.map(copyAndRemove);
 
     // create an empty grid to hold creatures competing for the same square
     // This grid is reused as a matrix of contender lists during the simulation step.
     eigenGrid = this.makeGrid() as unknown as PendingGrid;
 
     // Add each creature's intended destination to the eigenGrid
-    _.each(newGrid, processCreatures);
+    newGrid.forEach(processCreatures);
 
     // Choose a winner from each of the eigenGrid's superpositions
-    _.each(eigenGrid, pickWinner);
+    eigenGrid.forEach(pickWinner);
 
     if (!this.hasChanged) return false;
   }

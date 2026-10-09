@@ -1,9 +1,7 @@
 import seedrandom from 'seedrandom';
-import customLodash from '../lodash_custom/lodash.custom.min.js';
 import type {NeighborCoordinates, WeightedCreature} from './types';
 
 seedrandom('terra :)', {global: true});
-const _ = customLodash._;
 
 /**
  * Creates a function that returns a cell's neighbor coordinates.
@@ -14,7 +12,7 @@ const _ = customLodash._;
  * @param periodic - Whether neighbor coordinates wrap at grid boundaries.
  * @returns A function that returns the neighbors around a cell for the supplied radius.
  */
-_.getNeighborCoordsFn = (
+export const getNeighborCoordsFn = (
   xMax: number,
   yMax: number,
   vonNeumann: boolean,
@@ -115,9 +113,9 @@ _.getNeighborCoordsFn = (
   }
 };
 
-_.pickRandomWeighted = (weightedArrays: WeightedCreature[]): string | false => {
+export const pickRandomWeighted = (weightedArrays: WeightedCreature[]): string | false => {
   let sum = 0;
-  const rand = _.random(100, true);
+  const rand = Math.random() * 100;
   for (let i = 0; i < weightedArrays.length; i++) {
     const cur = weightedArrays[i];
     sum += cur[1];
@@ -125,5 +123,3 @@ _.pickRandomWeighted = (weightedArrays: WeightedCreature[]): string | false => {
   }
   return false;
 };
-
-export default _;
