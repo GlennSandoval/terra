@@ -1,8 +1,9 @@
 import typescript from '@rollup/plugin-typescript';
 import commonjs from '@rollup/plugin-commonjs';
 import {nodeResolve} from '@rollup/plugin-node-resolve';
+import dts from 'rollup-plugin-dts';
 
-export default {
+const javascript = {
   input: 'app/main.ts',
   output: {file: 'dist/terra.js', format: 'umd', name: 'terra'},
   plugins: [
@@ -11,3 +12,11 @@ export default {
     commonjs(),
   ],
 };
+
+const declarations = {
+  input: 'dist/.types/main.d.ts',
+  output: {file: 'dist/terra.d.ts', format: 'es'},
+  plugins: [dts()],
+};
+
+export default [javascript, declarations];
