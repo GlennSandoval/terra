@@ -12,7 +12,7 @@
     "format": "biome format --write .",
     "typecheck": "tsc --noEmit",
     "test": "bun test app && bun run typecheck",
-    "test:smoke": "bun run build && bun test ./tests/test.js"
+    "test:smoke": "bun run build && bun test ./tests/test.ts"
   },
   "keywords": [
     "terrarium",

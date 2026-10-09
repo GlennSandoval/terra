@@ -1,7 +1,7 @@
-const assert = require('node:assert/strict');
-const fs = require('node:fs');
-const vm = require('node:vm');
-const test = require('bun:test').test;
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import {runInNewContext} from 'node:vm';
+import {test} from 'bun:test';
 
 test('package entry rejects duplicate creature types', () => {
   const terra = require('..');
@@ -19,10 +19,26 @@ test('browser bundle applies periodic boundaries to von Neumann neighbors', () =
       body: {appendChild() {}},
     },
     devicePixelRatio: 1,
+    window: undefined as unknown,
   };
   context.window = context;
-  vm.runInNewContext(fs.readFileSync('dist/terra.min.js', 'utf8'), context);
-  const grid = new context.window.terra.Terrarium(3, 3, {
+  runInNewContext(readFileSync('dist/terra.min.js', 'utf8'), context);
+  const browser = context.window as {
+    terra: {
+      Terrarium: new (
+        width: number,
+        height: number,
+        options: {neighborhood: string; periodic: boolean},
+      ) => {
+        getNeighborCoords: (
+          x: number,
+          y: number,
+          radius: number,
+        ) => Iterable<{x: number; y: number}>;
+      };
+    };
+  };
+  const grid = new browser.terra.Terrarium(3, 3, {
     neighborhood: 'vonneumann',
     periodic: true,
   });
