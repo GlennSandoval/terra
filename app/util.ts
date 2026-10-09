@@ -14,16 +14,16 @@ var _ = customLodash._;
  * @param  {int} radius - (default = 1) neighbor radius
  * @return {array}      - an array of [x, y] pairs of the neighboring cells
  */
-_.getNeighborCoordsFn = function (
+_.getNeighborCoordsFn = (
   xMax: number,
   yMax: number,
   vonNeumann: boolean,
   periodic: boolean | undefined,
-): NeighborCoordinates {
+): NeighborCoordinates => {
   if (periodic) {
     if (vonNeumann) {
       // periodic von neumann
-      return function (x0, y0, radius) {
+      return (x0, y0, radius) => {
         var coords = [],
           x,
           rX,
@@ -49,7 +49,7 @@ _.getNeighborCoordsFn = function (
       };
     } else {
       // periodic moore
-      return function (x0, y0, radius) {
+      return (x0, y0, radius) => {
         var coords = [],
           x,
           xLo,
@@ -84,7 +84,7 @@ _.getNeighborCoordsFn = function (
 
     if (vonNeumann) {
       //non-periodic von-neumann
-      return function (x0, y0, radius) {
+      return (x0, y0, radius) => {
         var coords = [],
           x,
           rX,
@@ -110,7 +110,7 @@ _.getNeighborCoordsFn = function (
       };
     } else {
       // non-periodic moore
-      return function (x0, y0, radius) {
+      return (x0, y0, radius) => {
         var coords = [],
           x,
           xLo,
@@ -133,7 +133,7 @@ _.getNeighborCoordsFn = function (
   }
 };
 
-_.pickRandomWeighted = function (weightedArrays: WeightedCreature[]): string | false {
+_.pickRandomWeighted = (weightedArrays: WeightedCreature[]): string | false => {
   var sum = 0,
     rand = _.random(100, true);
   for (var i = 0; i < weightedArrays.length; i++) {

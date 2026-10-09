@@ -15,7 +15,7 @@ interface CreatureFactory {
 }
 
 // abstract factory that adds a superclass of baseCreature
-var factory: CreatureFactory = (function () {
+var factory: CreatureFactory = (() => {
   function baseCreature(this: Creature) {
     this.age = -1;
   }
@@ -37,15 +37,17 @@ var factory: CreatureFactory = (function () {
   baseCreature.prototype.moveLv = 0;
 
   baseCreature.prototype.boundEnergy = function (this: Creature) {
-    if (this.energy! > this.maxEnergy!) this.energy = this.maxEnergy!;
+    if (this.energy !== undefined && this.maxEnergy !== undefined && this.energy > this.maxEnergy) {
+      this.energy = this.maxEnergy;
+    }
   };
 
   baseCreature.prototype.isDead = function (this: Creature) {
-    return this.energy! <= 0;
+    return this.energy !== undefined && this.energy <= 0;
   };
 
   baseCreature.prototype.reproduce = function (this: Creature, neighbors: Neighbor[]) {
-    var spots = _.filter(neighbors, function (spot: Neighbor) {
+    var spots = _.filter(neighbors, (spot: Neighbor) => {
       return !spot.creature;
     });
 
@@ -55,7 +57,7 @@ var factory: CreatureFactory = (function () {
       var creature = factory.make(this.type);
 
       var successFn = function (this: Creature) {
-        this.energy! -= this.initialEnergy!;
+        this.energy = Number(this.energy) - Number(this.initialEnergy);
         return true;
       }.bind(this);
       var failureFn = this.wait;
@@ -71,19 +73,21 @@ var factory: CreatureFactory = (function () {
   };
 
   baseCreature.prototype.move = function (this: Creature, neighbors: Neighbor[]) {
-    var creature = this;
-
     // first, look for creatures to eat
     var spots = _.filter(
       neighbors,
       function (this: Creature, spot: Neighbor) {
-        return spot.creature ? spot.creature.size! < this.size! : false;
+        return spot.creature
+          ? spot.creature.size !== undefined &&
+              this.size !== undefined &&
+              spot.creature.size < this.size
+          : false;
       }.bind(this),
     );
 
     // if there's not enough food, try to move
-    if (spots.length < this.sustainability!) {
-      spots = _.filter(neighbors, function (spot: Neighbor) {
+    if (this.sustainability !== undefined && spots.length < this.sustainability) {
+      spots = _.filter(neighbors, (spot: Neighbor) => {
         return !spot.creature;
       });
     }
@@ -96,9 +100,10 @@ var factory: CreatureFactory = (function () {
       var coords = step.coords;
 
       var successFn = function (this: Creature) {
-        var foodEnergy = (step.creature ? step.creature.energy : undefined)! * this.efficiency!;
+        var foodEnergy =
+          Number(step.creature ? step.creature.energy : undefined) * Number(this.efficiency);
         // add foodEnergy if eating, subtract 10 if moving
-        this.energy = this.energy! + (foodEnergy || -10);
+        this.energy = Number(this.energy) + (foodEnergy || -10);
         // clear the original location
         return false;
       }.bind(this);
@@ -106,29 +111,41 @@ var factory: CreatureFactory = (function () {
       return {
         x: coords.x,
         y: coords.y,
-        creature: creature,
+        creature: this,
         successFn: successFn,
       };
     } else return false;
   };
 
   baseCreature.prototype.wait = function (this: Creature) {
-    this.energy! -= 5;
+    this.energy = Number(this.energy) - 5;
     return true;
   };
 
   baseCreature.prototype.process = function (
     this: Creature,
     neighbors: Neighbor[],
-    x: number,
-    y: number,
+    _x: number,
+    _y: number,
   ) {
     var step: CreatureAction | false = {x: 0, y: 0, creature: false};
     var maxEnergy = this.maxEnergy;
 
-    if (this.energy! > maxEnergy! * this.reproduceLv! && this.reproduce) {
+    if (
+      this.energy !== undefined &&
+      maxEnergy !== undefined &&
+      this.reproduceLv !== undefined &&
+      this.energy > maxEnergy * this.reproduceLv &&
+      this.reproduce
+    ) {
       step = this.reproduce(neighbors);
-    } else if (this.energy! > maxEnergy! * this.moveLv! && this.move) {
+    } else if (
+      this.energy !== undefined &&
+      maxEnergy !== undefined &&
+      this.moveLv !== undefined &&
+      this.energy > maxEnergy * this.moveLv &&
+      this.move
+    ) {
       step = this.move(neighbors);
     }
 
@@ -153,9 +170,9 @@ var factory: CreatureFactory = (function () {
   };
   baseCA.prototype.process = function (
     this: Creature,
-    neighbors: Neighbor[],
-    x: number,
-    y: number,
+    _neighbors: Neighbor[],
+    _x: number,
+    _y: number,
   ) {};
   baseCA.prototype.wait = function (this: Creature) {};
 
@@ -163,12 +180,12 @@ var factory: CreatureFactory = (function () {
   var types: Record<string, CreatureConstructor> = {};
 
   return {
-    make: function (type: string | false | undefined, options?: CreatureOptions): Creature | false {
+    make: (type: string | false | undefined, options?: CreatureOptions): Creature | false => {
       var CreatureType = types[String(type)];
       return CreatureType ? new CreatureType(options) : false;
     },
 
-    registerCreature: function (options: CreatureOptions, init?: CreatureInitializer) {
+    registerCreature: (options: CreatureOptions, init?: CreatureInitializer) => {
       var type = options.type;
       // only register classes that fulfill the creature contract
       if (typeof type === 'string' && typeof types[type] === 'undefined') {
@@ -194,7 +211,7 @@ var factory: CreatureFactory = (function () {
         types[type].prototype = new BaseCreatureConstructor();
         types[type].prototype.constructor = types[type];
 
-        _.each(options, function (value: unknown, key: string) {
+        _.each(options, (value: unknown, key: string) => {
           types[type].prototype[key] = value;
         });
 
@@ -206,7 +223,7 @@ var factory: CreatureFactory = (function () {
       } else return false;
     },
 
-    registerCA: function (options: CreatureOptions, init?: CreatureInitializer) {
+    registerCA: (options: CreatureOptions, init?: CreatureInitializer) => {
       var type = options.type;
       if (typeof type === 'string' && typeof types[type] === 'undefined') {
         // set the constructor, including init if it's defined
@@ -227,7 +244,7 @@ var factory: CreatureFactory = (function () {
         types[type].prototype = new BaseCAConstructor();
         types[type].prototype.constructor = types[type];
 
-        _.each(options, function (value: unknown, key: string) {
+        _.each(options, (value: unknown, key: string) => {
           types[type].prototype[key] = value;
         });
 

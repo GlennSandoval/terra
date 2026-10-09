@@ -14,8 +14,8 @@ export interface CreatureAction {
   x: number;
   y: number;
   creature: Creature | false;
-  successFn?: () => boolean | void;
-  failureFn?: () => boolean | void;
+  successFn?: () => boolean | undefined;
+  failureFn?: () => boolean | undefined;
   observed?: boolean;
 }
 
@@ -33,14 +33,14 @@ export interface Creature {
   color: Color;
   colorFn?: () => string;
   character?: string;
-  successFn?: () => boolean | void;
-  failureFn?: () => boolean | void;
+  successFn?: () => boolean | undefined;
+  failureFn?: () => boolean | undefined;
   reproduce?(neighbors: Neighbor[]): CreatureAction | false;
   move?(neighbors: Neighbor[]): CreatureAction | false;
   boundEnergy(): void;
   isDead(): boolean;
   process(neighbors: Neighbor[], x: number, y: number): CreatureAction | boolean | undefined;
-  wait(): boolean | void;
+  wait(): boolean | undefined;
   [property: string]: unknown;
 }
 

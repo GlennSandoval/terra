@@ -25,12 +25,15 @@ test('reproduction creates a child and charges the parent on success', () => {
   if (parent === false) throw new Error('registered creature was not created');
   parent.energy = 80;
 
-  const action = parent.reproduce!([{coords: {x: 1, y: 0}, creature: false}]);
+  const reproduce = parent.reproduce;
+  if (!reproduce) throw new Error('registered creature cannot reproduce');
+  const action = reproduce.call(parent, [{coords: {x: 1, y: 0}, creature: false}]);
   if (action === false) throw new Error('reproduction did not produce an action');
   expect(action.x).toBe(1);
   expect(action.y).toBe(0);
   expect(action.creature).not.toBe(false);
-  action.successFn!.call(parent);
+  if (!action.successFn) throw new Error('reproduction action has no success callback');
+  action.successFn.call(parent);
   expect(parent.energy).toBe(40);
 });
 

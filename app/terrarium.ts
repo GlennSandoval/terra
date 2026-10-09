@@ -124,8 +124,8 @@ Terrarium.prototype.makeGrid = function (this: TerrariumInstance, content?: Grid
         factory.make(
           typeof content === 'function'
             ? content(x, y)
-            : typeof content === 'object' && content!.length
-              ? (content![y] || [])[x]
+            : Array.isArray(content) && content.length
+              ? (content[y] || [])[x]
               : typeof content === 'string'
                 ? content
                 : undefined,
@@ -168,7 +168,7 @@ Terrarium.prototype.step = function (
       // Registered cells retain their concrete constructors when copied.
       const CreatureConstructor = origCreature.constructor as unknown as new () => Creature;
       var copy = _.assign(new CreatureConstructor(), origCreature);
-      var dead = copy && copy.isDead();
+      var dead = copy.isDead();
       if (dead && !self.hasChanged) self.hasChanged = true;
       copy.age++;
 
@@ -193,7 +193,8 @@ Terrarium.prototype.step = function (
     var action = loser as CreatureAction;
     var loserCreature = action.creature;
     if (loserCreature) {
-      loserCreature.failureFn!();
+      if (!loserCreature.failureFn) throw new Error('Creature action has no failure callback.');
+      loserCreature.failureFn();
       loserCreature.boundEnergy();
     } else {
       var creature = loser as Creature;
@@ -233,7 +234,7 @@ Terrarium.prototype.step = function (
   }
 
   function processCreatures(column: Array<Creature | false>, x: number): void {
-    _.each(column, function (creature: Creature | false, y: number) {
+    _.each(column, (creature: Creature | false, y: number) => {
       processCreaturesInner(creature, x, y);
     });
   }
@@ -243,16 +244,20 @@ Terrarium.prototype.step = function (
       var winner = superposition.splice(_.random(superposition.length - 1), 1)[0];
       // Actions in this grid were emitted by live creatures.
       var winnerCreature = winner.creature as Creature;
+      var nextGrid = newGrid;
+      if (!nextGrid) throw new Error('Cannot select a winner before creating the next grid.');
+      var successFn = winnerCreature.successFn;
+      if (!successFn) throw new Error('Creature action has no success callback.');
 
       // clear the original creature's square if successFn returns false
-      if (!winnerCreature.successFn!()) {
-        newGrid![winner.x][winner.y] = false;
+      if (!successFn.call(winnerCreature)) {
+        nextGrid[winner.x][winner.y] = false;
       }
       // TODO: so many calls to this. Can we just run it once at the start of a step?
       winnerCreature.boundEnergy();
 
       // put the winner in its rightful place
-      newGrid![x][y] = winnerCreature;
+      nextGrid[x][y] = winnerCreature;
 
       // ...and call wait() on the losers. We can do this without
       // affecting temporal consistency because all callbacks have
@@ -262,7 +267,7 @@ Terrarium.prototype.step = function (
   }
 
   function pickWinner(column: Array<CreatureAction[] | false>, x: number): void {
-    _.each(column, function (superposition: CreatureAction[] | false, y: number) {
+    _.each(column, (superposition: CreatureAction[] | false, y: number) => {
       pickWinnerInner(superposition, x, y);
     });
   }
@@ -351,7 +356,9 @@ Terrarium.prototype.stop = function (this: TerrariumInstance): void {
 Terrarium.prototype.destroy = function (this: TerrariumInstance): void {
   var canvas = this.canvas;
   this.stop();
-  canvas.parentNode!.removeChild(canvas);
+  var parent = canvas.parentNode;
+  if (!parent) throw new Error('Cannot destroy a canvas without a parent.');
+  parent.removeChild(canvas);
 };
 
 export default Terrarium;

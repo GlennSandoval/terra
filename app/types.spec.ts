@@ -15,10 +15,14 @@ type Equal<A, B> =
     : false;
 type Assert<T extends true> = T;
 
-type ColorContract = Assert<Equal<Color, string | number[]>>;
-type CoordinateContract = Assert<Equal<Coordinate, {x: number; y: number}>>;
-type NeighborContract = Assert<Equal<Neighbor, {coords: Coordinate; creature: Creature | false}>>;
-type WeightedCreatureContract = Assert<Equal<WeightedCreature, [type: string, weight: number]>>;
-type NeighborCoordinatesContract = Assert<
+export type ColorContract = Assert<Equal<Color, string | number[]>>;
+export type CoordinateContract = Assert<Equal<Coordinate, {x: number; y: number}>>;
+export type NeighborContract = Assert<
+  Equal<Neighbor, {coords: Coordinate; creature: Creature | false}>
+>;
+export type WeightedCreatureContract = Assert<
+  Equal<WeightedCreature, [type: string, weight: number]>
+>;
+export type NeighborCoordinatesContract = Assert<
   Equal<NeighborCoordinates, (x: number, y: number, radius: number) => Coordinate[]>
 >;
