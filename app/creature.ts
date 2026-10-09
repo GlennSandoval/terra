@@ -15,7 +15,7 @@ interface CreatureFactory {
 }
 
 // abstract factory that adds a superclass of baseCreature
-var factory: CreatureFactory = (() => {
+const factory: CreatureFactory = (() => {
   function baseCreature(this: Creature) {
     this.age = -1;
   }
@@ -47,20 +47,20 @@ var factory: CreatureFactory = (() => {
   };
 
   baseCreature.prototype.reproduce = function (this: Creature, neighbors: Neighbor[]) {
-    var spots = _.filter(neighbors, (spot: Neighbor) => {
+    const spots = _.filter(neighbors, (spot: Neighbor) => {
       return !spot.creature;
     });
 
     if (spots.length) {
-      var step = spots[_.random(spots.length - 1)];
-      var coords = step.coords;
-      var creature = factory.make(this.type);
+      const step = spots[_.random(spots.length - 1)];
+      const coords = step.coords;
+      const creature = factory.make(this.type);
 
-      var successFn = function (this: Creature) {
+      const successFn = function (this: Creature) {
         this.energy = Number(this.energy) - Number(this.initialEnergy);
         return true;
       }.bind(this);
-      var failureFn = this.wait;
+      const failureFn = this.wait;
 
       return {
         x: coords.x,
@@ -74,7 +74,7 @@ var factory: CreatureFactory = (() => {
 
   baseCreature.prototype.move = function (this: Creature, neighbors: Neighbor[]) {
     // first, look for creatures to eat
-    var spots = _.filter(
+    let spots = _.filter(
       neighbors,
       function (this: Creature, spot: Neighbor) {
         return spot.creature
@@ -95,12 +95,12 @@ var factory: CreatureFactory = (() => {
     // if we've got a spot to move to...
     if (spots.length) {
       // ...pick one
-      var step = spots[_.random(spots.length - 1)];
+      const step = spots[_.random(spots.length - 1)];
 
-      var coords = step.coords;
+      const coords = step.coords;
 
-      var successFn = function (this: Creature) {
-        var foodEnergy =
+      const successFn = function (this: Creature) {
+        const foodEnergy =
           Number(step.creature ? step.creature.energy : undefined) * Number(this.efficiency);
         // add foodEnergy if eating, subtract 10 if moving
         this.energy = Number(this.energy) + (foodEnergy || -10);
@@ -128,8 +128,8 @@ var factory: CreatureFactory = (() => {
     _x: number,
     _y: number,
   ) {
-    var step: CreatureAction | false = {x: 0, y: 0, creature: false};
-    var maxEnergy = this.maxEnergy;
+    let step: CreatureAction | false = {x: 0, y: 0, creature: false};
+    const maxEnergy = this.maxEnergy;
 
     if (
       this.energy !== undefined &&
@@ -150,7 +150,7 @@ var factory: CreatureFactory = (() => {
     }
 
     if (step !== false && step.creature) {
-      var creature = step.creature;
+      const creature = step.creature;
       creature.successFn = step.successFn || creature.wait;
       creature.failureFn = step.failureFn || creature.wait;
 
@@ -177,16 +177,16 @@ var factory: CreatureFactory = (() => {
   baseCA.prototype.wait = function (this: Creature) {};
 
   // Storage for our creature types
-  var types: Record<string, CreatureConstructor> = {};
+  const types: Record<string, CreatureConstructor> = {};
 
   return {
     make: (type: string | false | undefined, options?: CreatureOptions): Creature | false => {
-      var CreatureType = types[String(type)];
+      const CreatureType = types[String(type)];
       return CreatureType ? new CreatureType(options) : false;
     },
 
     registerCreature: (options: CreatureOptions, init?: CreatureInitializer) => {
-      var type = options.type;
+      const type = options.type;
       // only register classes that fulfill the creature contract
       if (typeof type === 'string' && typeof types[type] === 'undefined') {
         // set the constructor, including init if it's defined
@@ -202,7 +202,7 @@ var factory: CreatureFactory = (() => {
           } as unknown as CreatureConstructor;
         }
 
-        var color = options.color || options.colour;
+        const color = options.color || options.colour;
         // set the color randomly if none is provided
         if (typeof color !== 'object' || color.length !== 3) {
           options.color = [_.random(255), _.random(255), _.random(255)];
@@ -224,7 +224,7 @@ var factory: CreatureFactory = (() => {
     },
 
     registerCA: (options: CreatureOptions, init?: CreatureInitializer) => {
-      var type = options.type;
+      const type = options.type;
       if (typeof type === 'string' && typeof types[type] === 'undefined') {
         // set the constructor, including init if it's defined
         // These dynamic constructors get their typed prototype directly below.
@@ -233,7 +233,7 @@ var factory: CreatureFactory = (() => {
               init.call(this);
             }
           : function (this: Creature) {}) as unknown as CreatureConstructor;
-        var color = (options.color = options.color || options.colour);
+        const color = (options.color = options.color || options.colour);
         // set the color randomly if none is provided
         if (typeof color !== 'object' || color.length !== 3) {
           options.color = [_.random(255), _.random(255), _.random(255)];

@@ -20,7 +20,7 @@ export default function display(
   _.each(grid, (column: Array<Creature | false>, x: number) => {
     _.each(column, (creature: Creature | false, y: number) => {
       if (creature) {
-        var color = creature.colorFn
+        const color = creature.colorFn
           ? creature.colorFn()
           : `${String(creature.color)},${Number(creature.energy) / Number(creature.maxEnergy)}`;
 

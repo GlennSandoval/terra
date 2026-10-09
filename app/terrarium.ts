@@ -71,16 +71,14 @@ const Terrarium: TerrariumConstructor = function (
   height: number,
   options?: TerrariumOptions | null,
 ) {
-  var cellSize, neighborhood;
-
   // cast width and height to integers
   width = Math.ceil(width);
   height = Math.ceil(height);
 
   // set default options
   options = options || {};
-  cellSize = options.cellSize || 10;
-  neighborhood = options.neighborhood || options.neighbourhood;
+  const cellSize = options.cellSize || 10;
+  let neighborhood = options.neighborhood || options.neighbourhood;
   if (typeof neighborhood === 'string') neighborhood = neighborhood.toLowerCase();
 
   this.width = width;
@@ -116,10 +114,12 @@ const Terrarium: TerrariumConstructor = function (
  * @return {grid}       a grid adhering to the above rules
  */
 Terrarium.prototype.makeGrid = function (this: TerrariumInstance, content?: GridContent): Grid {
-  var grid: Grid = [];
-  for (var x = 0, _w = this.width; x < _w; x++) {
+  const grid: Grid = [];
+  const width = this.width;
+  for (let x = 0; x < width; x++) {
     grid.push([]);
-    for (var y = 0, _h = this.height; y < _h; y++) {
+    const height = this.height;
+    for (let y = 0; y < height; y++) {
       grid[x].push(
         factory.make(
           typeof content === 'function'
@@ -144,10 +144,12 @@ Terrarium.prototype.makeGridWithDistribution = function (
   this: TerrariumInstance,
   distribution: WeightedCreature[],
 ): Grid {
-  var grid: Grid = [];
-  for (var x = 0, _w = this.width; x < _w; x++) {
+  const grid: Grid = [];
+  const width = this.width;
+  for (let x = 0; x < width; x++) {
     grid.push([]);
-    for (var y = 0, _h = this.height; y < _h; y++) {
+    const height = this.height;
+    for (let y = 0; y < height; y++) {
       grid[x].push(factory.make(_.pickRandomWeighted(distribution)));
     }
   }
@@ -167,8 +169,8 @@ Terrarium.prototype.step = function (
     if (origCreature) {
       // Registered cells retain their concrete constructors when copied.
       const CreatureConstructor = origCreature.constructor as unknown as new () => Creature;
-      var copy = _.assign(new CreatureConstructor(), origCreature);
-      var dead = copy.isDead();
+      const copy = _.assign(new CreatureConstructor(), origCreature);
+      const dead = copy.isDead();
       if (dead && !self.hasChanged) self.hasChanged = true;
       copy.age++;
 
@@ -190,14 +192,14 @@ Terrarium.prototype.step = function (
 
   function processLoser(loser: Creature | CreatureAction): void {
     // Losers are either creatures or action records; preserve the legacy property probe.
-    var action = loser as CreatureAction;
-    var loserCreature = action.creature;
+    const action = loser as CreatureAction;
+    const loserCreature = action.creature;
     if (loserCreature) {
       if (!loserCreature.failureFn) throw new Error('Creature action has no failure callback.');
       loserCreature.failureFn();
       loserCreature.boundEnergy();
     } else {
-      var creature = loser as Creature;
+      const creature = loser as Creature;
       creature.wait();
       creature.boundEnergy();
     }
@@ -205,17 +207,17 @@ Terrarium.prototype.step = function (
 
   function processCreaturesInner(creature: Creature | false, x: number, y: number): void {
     if (creature) {
-      var neighbors = _.map(
+      const neighbors = _.map(
         self.getNeighborCoords(x, y, creature.actionRadius),
         zipCoordsWithNeighbors,
       );
-      var result = creature.process(neighbors, x, y);
+      const result = creature.process(neighbors, x, y);
       if (typeof result === 'object') {
-        var eigenColumn = eigenGrid[result.x];
-        var returnedCreature = result.creature;
-        var returnedY = result.y;
+        const eigenColumn = eigenGrid[result.x];
+        const returnedCreature = result.creature;
+        const returnedY = result.y;
 
-        var contenders = eigenColumn[returnedY];
+        let contenders = eigenColumn[returnedY];
         if (!contenders) {
           contenders = [];
           eigenColumn[returnedY] = contenders;
@@ -241,12 +243,12 @@ Terrarium.prototype.step = function (
 
   function pickWinnerInner(superposition: CreatureAction[] | false, x: number, y: number): void {
     if (superposition) {
-      var winner = superposition.splice(_.random(superposition.length - 1), 1)[0];
+      const winner = superposition.splice(_.random(superposition.length - 1), 1)[0];
       // Actions in this grid were emitted by live creatures.
-      var winnerCreature = winner.creature as Creature;
-      var nextGrid = newGrid;
+      const winnerCreature = winner.creature as Creature;
+      const nextGrid = newGrid;
       if (!nextGrid) throw new Error('Cannot select a winner before creating the next grid.');
-      var successFn = winnerCreature.successFn;
+      const successFn = winnerCreature.successFn;
       if (!successFn) throw new Error('Creature action has no success callback.');
 
       // clear the original creature's square if successFn returns false
@@ -272,10 +274,10 @@ Terrarium.prototype.step = function (
     });
   }
 
-  var self = this;
-  var oldGrid: Grid = this.grid,
-    newGrid: Grid | undefined,
-    eigenGrid: PendingGrid;
+  const self = this;
+  let oldGrid: Grid = this.grid;
+  let newGrid: Grid | undefined;
+  let eigenGrid: PendingGrid;
   if (typeof steps !== 'number') steps = 1;
 
   while (steps--) {
@@ -319,8 +321,11 @@ Terrarium.prototype.animate = function (
   steps?: number | (() => void) | null,
   fn?: () => void,
 ): void {
+  let i = 0;
+  const self = this;
+
   function tick() {
-    var grid = self.step();
+    const grid = self.step();
     if (grid) {
       self.grid = grid;
       self.draw();
@@ -336,8 +341,6 @@ Terrarium.prototype.animate = function (
   }
 
   if (!this.nextFrame) {
-    var i = 0;
-    var self = this;
     self.nextFrame = requestAnimationFrame(tick);
   }
 };
@@ -354,9 +357,9 @@ Terrarium.prototype.stop = function (this: TerrariumInstance): void {
  * Stops any currently running animation and cleans up the DOM
  */
 Terrarium.prototype.destroy = function (this: TerrariumInstance): void {
-  var canvas = this.canvas;
+  const canvas = this.canvas;
   this.stop();
-  var parent = canvas.parentNode;
+  const parent = canvas.parentNode;
   if (!parent) throw new Error('Cannot destroy a canvas without a parent.');
   parent.removeChild(canvas);
 };

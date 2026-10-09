@@ -3,7 +3,7 @@ import customLodash from '../lodash_custom/lodash.custom.min.js';
 import type {NeighborCoordinates, WeightedCreature} from './types';
 
 seedrandom('terra :)', {global: true});
-var _ = customLodash._;
+const _ = customLodash._;
 
 /**
  * Takes a cell and returns the coordinates of its neighbors
@@ -24,12 +24,8 @@ _.getNeighborCoordsFn = (
     if (vonNeumann) {
       // periodic von neumann
       return (x0, y0, radius) => {
-        var coords = [],
-          x,
-          rX,
-          y,
-          rY,
-          rYMax;
+        const coords = [];
+        let x, rX, y, rY, rYMax;
 
         for (rX = -radius; rX <= radius; ++rX) {
           rYMax = radius - Math.abs(rX);
@@ -50,13 +46,8 @@ _.getNeighborCoordsFn = (
     } else {
       // periodic moore
       return (x0, y0, radius) => {
-        var coords = [],
-          x,
-          xLo,
-          xHi,
-          y,
-          yLo,
-          yHi;
+        const coords = [];
+        let x, xLo, xHi, y, yLo, yHi;
 
         xLo = x0 - radius;
         yLo = y0 - radius;
@@ -85,12 +76,8 @@ _.getNeighborCoordsFn = (
     if (vonNeumann) {
       //non-periodic von-neumann
       return (x0, y0, radius) => {
-        var coords = [],
-          x,
-          rX,
-          y,
-          rY,
-          rYMax;
+        const coords = [];
+        let x, rX, y, rY, rYMax;
 
         for (rX = -radius; rX <= radius; ++rX) {
           rYMax = radius - Math.abs(rX);
@@ -111,13 +98,8 @@ _.getNeighborCoordsFn = (
     } else {
       // non-periodic moore
       return (x0, y0, radius) => {
-        var coords = [],
-          x,
-          xLo,
-          xHi,
-          y,
-          yLo,
-          yHi;
+        const coords = [];
+        let x, xLo, xHi, y, yLo, yHi;
 
         xLo = Math.max(0, x0 - radius);
         yLo = Math.max(0, y0 - radius);
@@ -134,10 +116,10 @@ _.getNeighborCoordsFn = (
 };
 
 _.pickRandomWeighted = (weightedArrays: WeightedCreature[]): string | false => {
-  var sum = 0,
-    rand = _.random(100, true);
-  for (var i = 0; i < weightedArrays.length; i++) {
-    var cur = weightedArrays[i];
+  let sum = 0;
+  const rand = _.random(100, true);
+  for (let i = 0; i < weightedArrays.length; i++) {
+    const cur = weightedArrays[i];
     sum += cur[1];
     if (sum > rand) return cur[0];
   }
