@@ -18,8 +18,9 @@ test('browser bundle applies periodic boundaries to von Neumann neighbors', () =
       }),
       body: {appendChild() {}}
     },
-    window: {devicePixelRatio: 1}
+    devicePixelRatio: 1
   };
+  context.window = context;
   vm.runInNewContext(fs.readFileSync('dist/terra.min.js', 'utf8'), context);
   const grid = new context.window.terra.Terrarium(3, 3, {
     neighborhood: 'vonneumann',
