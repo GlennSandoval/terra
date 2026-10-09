@@ -15,7 +15,10 @@ afterEach(() => {
 function installDom() {
   Object.defineProperty(globalThis, 'document', {
     configurable: true,
-    value: {createElement: () => ({style: {}, getContext: () => ({scale() {}})}), body: {appendChild() {}}}
+    value: {
+      createElement: () => ({style: {}, getContext: () => ({scale() {}})}),
+      body: {appendChild() {}},
+    },
   });
   Object.defineProperty(globalThis, 'window', {configurable: true, value: {devicePixelRatio: 1}});
 }
@@ -30,11 +33,19 @@ test('constructor rounds dimensions and makeGrid resolves content by coordinates
   expect(terrarium.height).toBe(2);
   expect(terrarium.canvas.width).toBe(12);
   expect(terrarium.canvas.height).toBe(8);
-  expect(terrarium.getNeighborCoords(0, 0, 1)).toEqual([{x: 0, y: 1}, {x: 1, y: 0}]);
-  const grid = terrarium.makeGrid((x, y) => x === 1 && y === 0 ? type : 'missing');
+  expect(terrarium.getNeighborCoords(0, 0, 1)).toEqual([
+    {x: 0, y: 1},
+    {x: 1, y: 0},
+  ]);
+  const grid = terrarium.makeGrid((x, y) => (x === 1 && y === 0 ? type : 'missing'));
   expect(grid[1][0]).toMatchObject({type});
   expect(grid[0][0]).toBe(false);
-  expect(terrarium.makeGridWithDistribution([[type, 100]]).flat().every((cell) => cell !== false)).toBe(true);
+  expect(
+    terrarium
+      .makeGridWithDistribution([[type, 100]])
+      .flat()
+      .every((cell) => cell !== false),
+  ).toBe(true);
 });
 
 test('step moves an observed creature action and leaves the origin empty', () => {
@@ -47,7 +58,7 @@ test('step moves an observed creature action and leaves the origin empty', () =>
     failureFn: () => true,
     process: function (this: Creature) {
       return {x: 1, y: 0, creature: this, observed: true};
-    }
+    },
   });
   const terrarium = new Terrarium(2, 1);
   terrarium.grid = terrarium.makeGrid(type);

@@ -68,6 +68,11 @@ export interface LodashSubset {
   map<T, Result>(collection: T[], iteratee: (value: T, index: number) => Result): Result[];
   assign<T extends object>(target: T, source: object): T;
   clone<T extends object>(value: T): T;
-  getNeighborCoordsFn(xMax: number, yMax: number, vonNeumann: boolean, periodic: boolean | undefined): NeighborCoordinates;
+  getNeighborCoordsFn(
+    xMax: number,
+    yMax: number,
+    vonNeumann: boolean,
+    periodic: boolean | undefined,
+  ): NeighborCoordinates;
   pickRandomWeighted(weightedArrays: WeightedCreature[]): string | false;
 }

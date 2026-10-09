@@ -7,8 +7,7 @@
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-;(function() {
-
+(function () {
   /** Used to pool arrays and objects used internally */
   var arrayPool = [];
 
@@ -29,61 +28,71 @@
 
   /** Used to fix the JScript [[DontEnum]] bug */
   var shadowedProps = [
-    'constructor', 'hasOwnProperty', 'isPrototypeOf', 'propertyIsEnumerable',
-    'toLocaleString', 'toString', 'valueOf'
+    'constructor',
+    'hasOwnProperty',
+    'isPrototypeOf',
+    'propertyIsEnumerable',
+    'toLocaleString',
+    'toString',
+    'valueOf',
   ];
 
   /** `Object#toString` result shortcuts */
   var argsClass = '[object Arguments]',
-      arrayClass = '[object Array]',
-      boolClass = '[object Boolean]',
-      dateClass = '[object Date]',
-      errorClass = '[object Error]',
-      funcClass = '[object Function]',
-      numberClass = '[object Number]',
-      objectClass = '[object Object]',
-      regexpClass = '[object RegExp]',
-      stringClass = '[object String]';
+    arrayClass = '[object Array]',
+    boolClass = '[object Boolean]',
+    dateClass = '[object Date]',
+    errorClass = '[object Error]',
+    funcClass = '[object Function]',
+    numberClass = '[object Number]',
+    objectClass = '[object Object]',
+    regexpClass = '[object RegExp]',
+    stringClass = '[object String]';
 
   /** Used to identify object classifications that `_.clone` supports */
   var cloneableClasses = {};
   cloneableClasses[funcClass] = false;
-  cloneableClasses[argsClass] = cloneableClasses[arrayClass] =
-  cloneableClasses[boolClass] = cloneableClasses[dateClass] =
-  cloneableClasses[numberClass] = cloneableClasses[objectClass] =
-  cloneableClasses[regexpClass] = cloneableClasses[stringClass] = true;
+  cloneableClasses[argsClass] =
+    cloneableClasses[arrayClass] =
+    cloneableClasses[boolClass] =
+    cloneableClasses[dateClass] =
+    cloneableClasses[numberClass] =
+    cloneableClasses[objectClass] =
+    cloneableClasses[regexpClass] =
+    cloneableClasses[stringClass] =
+      true;
 
   /** Used as the property descriptor for `__bindData__` */
   var descriptor = {
-    'configurable': false,
-    'enumerable': false,
-    'value': null,
-    'writable': false
+    configurable: false,
+    enumerable: false,
+    value: null,
+    writable: false,
   };
 
   /** Used as the data object for `iteratorTemplate` */
   var iteratorData = {
-    'args': '',
-    'array': null,
-    'bottom': '',
-    'firstArg': '',
-    'init': '',
-    'keys': null,
-    'loop': '',
-    'shadowedProps': null,
-    'support': null,
-    'top': '',
-    'useHas': false
+    args: '',
+    array: null,
+    bottom: '',
+    firstArg: '',
+    init: '',
+    keys: null,
+    loop: '',
+    shadowedProps: null,
+    support: null,
+    top: '',
+    useHas: false,
   };
 
   /** Used to determine if values are of the language type Object */
   var objectTypes = {
-    'boolean': false,
-    'function': true,
-    'object': true,
-    'number': false,
-    'string': false,
-    'undefined': false
+    boolean: false,
+    function: true,
+    object: true,
+    number: false,
+    string: false,
+    undefined: false,
   };
 
   /** Used as a reference to the global object */
@@ -158,8 +167,8 @@
       end = array ? array.length : 0;
     }
     var index = -1,
-        length = end - start || 0,
-        result = Array(length < 0 ? 0 : length);
+      length = end - start || 0,
+      result = Array(length < 0 ? 0 : length);
 
     while (++index < length) {
       result[index] = array[start + index];
@@ -179,44 +188,46 @@
 
   /** Used for native method references */
   var errorProto = Error.prototype,
-      objectProto = Object.prototype,
-      stringProto = String.prototype;
+    objectProto = Object.prototype,
+    stringProto = String.prototype;
 
   /** Used to resolve the internal [[Class]] of values */
   var toString = objectProto.toString;
 
   /** Used to detect if a method is native */
-  var reNative = RegExp('^' +
-    String(toString)
-      .replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-      .replace(/toString| for [^\]]+/g, '.*?') + '$'
+  var reNative = RegExp(
+    '^' +
+      String(toString)
+        .replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+        .replace(/toString| for [^\]]+/g, '.*?') +
+      '$',
   );
 
   /** Native method shortcuts */
   var floor = Math.floor,
-      fnToString = Function.prototype.toString,
-      hasOwnProperty = objectProto.hasOwnProperty,
-      push = arrayRef.push,
-      propertyIsEnumerable = objectProto.propertyIsEnumerable,
-      unshift = arrayRef.unshift;
+    fnToString = Function.prototype.toString,
+    hasOwnProperty = objectProto.hasOwnProperty,
+    push = arrayRef.push,
+    propertyIsEnumerable = objectProto.propertyIsEnumerable,
+    unshift = arrayRef.unshift;
 
   /** Used to set meta data on functions */
-  var defineProperty = (function() {
+  var defineProperty = (function () {
     // IE 8 only accepts DOM elements
     try {
       var o = {},
-          func = isNative(func = Object.defineProperty) && func,
-          result = func(o, o, o) && func;
-    } catch(e) { }
+        func = isNative((func = Object.defineProperty)) && func,
+        result = func(o, o, o) && func;
+    } catch (e) {}
     return result;
-  }());
+  })();
 
   /* Native method shortcuts for methods with the same name as other `lodash` methods */
-  var nativeCreate = isNative(nativeCreate = Object.create) && nativeCreate,
-      nativeIsArray = isNative(nativeIsArray = Array.isArray) && nativeIsArray,
-      nativeKeys = isNative(nativeKeys = Object.keys) && nativeKeys,
-      nativeMin = Math.min,
-      nativeRandom = Math.random;
+  var nativeCreate = isNative((nativeCreate = Object.create)) && nativeCreate,
+    nativeIsArray = isNative((nativeIsArray = Array.isArray)) && nativeIsArray,
+    nativeKeys = isNative((nativeKeys = Object.keys)) && nativeKeys,
+    nativeMin = Math.min,
+    nativeRandom = Math.random;
 
   /** Used to lookup a built-in constructor by [[Class]] */
   var ctorByClass = {};
@@ -231,22 +242,35 @@
 
   /** Used to avoid iterating non-enumerable properties in IE < 9 */
   var nonEnumProps = {};
-  nonEnumProps[arrayClass] = nonEnumProps[dateClass] = nonEnumProps[numberClass] = { 'constructor': true, 'toLocaleString': true, 'toString': true, 'valueOf': true };
-  nonEnumProps[boolClass] = nonEnumProps[stringClass] = { 'constructor': true, 'toString': true, 'valueOf': true };
-  nonEnumProps[errorClass] = nonEnumProps[funcClass] = nonEnumProps[regexpClass] = { 'constructor': true, 'toString': true };
-  nonEnumProps[objectClass] = { 'constructor': true };
+  nonEnumProps[arrayClass] =
+    nonEnumProps[dateClass] =
+    nonEnumProps[numberClass] =
+      {constructor: true, toLocaleString: true, toString: true, valueOf: true};
+  nonEnumProps[boolClass] = nonEnumProps[stringClass] = {
+    constructor: true,
+    toString: true,
+    valueOf: true,
+  };
+  nonEnumProps[errorClass] =
+    nonEnumProps[funcClass] =
+    nonEnumProps[regexpClass] =
+      {constructor: true, toString: true};
+  nonEnumProps[objectClass] = {constructor: true};
 
-  (function() {
+  (function () {
     var length = shadowedProps.length;
     while (length--) {
       var key = shadowedProps[length];
       for (var className in nonEnumProps) {
-        if (hasOwnProperty.call(nonEnumProps, className) && !hasOwnProperty.call(nonEnumProps[className], key)) {
+        if (
+          hasOwnProperty.call(nonEnumProps, className) &&
+          !hasOwnProperty.call(nonEnumProps[className], key)
+        ) {
           nonEnumProps[className][key] = false;
         }
       }
     }
-  }());
+  })();
 
   /*--------------------------------------------------------------------------*/
 
@@ -326,16 +350,21 @@
    * @memberOf _
    * @type Object
    */
-  var support = lodash.support = {};
+  var support = (lodash.support = {});
 
-  (function() {
-    var ctor = function() { this.x = 1; },
-        object = { '0': 1, 'length': 1 },
-        props = [];
+  (function () {
+    var ctor = function () {
+        this.x = 1;
+      },
+      object = {0: 1, length: 1},
+      props = [];
 
-    ctor.prototype = { 'valueOf': 1, 'y': 1 };
-    for (var key in new ctor) { props.push(key); }
-    for (key in arguments) { }
+    ctor.prototype = {valueOf: 1, y: 1};
+    for (var key in new ctor()) {
+      props.push(key);
+    }
+    for (key in arguments) {
+    }
 
     /**
      * Detect if an `arguments` object's [[Class]] is resolvable (all but Firefox < 4, IE < 9).
@@ -360,7 +389,9 @@
      * @memberOf _.support
      * @type boolean
      */
-    support.enumErrorProps = propertyIsEnumerable.call(errorProto, 'message') || propertyIsEnumerable.call(errorProto, 'name');
+    support.enumErrorProps =
+      propertyIsEnumerable.call(errorProto, 'message') ||
+      propertyIsEnumerable.call(errorProto, 'name');
 
     /**
      * Detect if `prototype` properties are enumerable by default.
@@ -382,7 +413,11 @@
      * @memberOf _.support
      * @type boolean
      */
-    support.funcDecomp = !isNative(root.WinRTError) && reThis.test(function() { return this; });
+    support.funcDecomp =
+      !isNative(root.WinRTError) &&
+      reThis.test(function () {
+        return this;
+      });
 
     /**
      * Detect if `Function#name` is supported (all but IE).
@@ -435,7 +470,7 @@
      * @memberOf _.support
      * @type boolean
      */
-    support.unindexedChars = ('x'[0] + Object('x')[0]) != 'xx';
+    support.unindexedChars = 'x'[0] + Object('x')[0] != 'xx';
 
     /**
      * Detect if a DOM node's [[Class]] is resolvable (all but IE < 9)
@@ -446,11 +481,11 @@
      * @type boolean
      */
     try {
-      support.nodeClass = !(toString.call(document) == objectClass && !({ 'toString': 0 } + ''));
-    } catch(e) {
+      support.nodeClass = !(toString.call(document) == objectClass && !({toString: 0} + ''));
+    } catch (e) {
       support.nodeClass = true;
     }
-  }(1));
+  })(1);
 
   /*--------------------------------------------------------------------------*/
 
@@ -461,95 +496,91 @@
    * @param {Object} data The data object used to populate the text.
    * @returns {string} Returns the interpolated text.
    */
-  var iteratorTemplate = function(obj) {
+  var iteratorTemplate = function (obj) {
+    var __p =
+      'var index, iterable = ' +
+      obj.firstArg +
+      ', result = ' +
+      obj.init +
+      ';\nif (!iterable) return result;\n' +
+      obj.top +
+      ';';
+    if (obj.array) {
+      __p += '\nvar length = iterable.length; index = -1;\nif (' + obj.array + ') {  ';
+      if (support.unindexedChars) {
+        __p += "\n  if (isString(iterable)) {\n    iterable = iterable.split('')\n  }  ";
+      }
+      __p += '\n  while (++index < length) {\n    ' + obj.loop + ';\n  }\n}\nelse {  ';
+    } else if (support.nonEnumArgs) {
+      __p +=
+        "\n  var length = iterable.length; index = -1;\n  if (length && isArguments(iterable)) {\n    while (++index < length) {\n      index += '';\n      " +
+        obj.loop +
+        ';\n    }\n  } else {  ';
+    }
 
-    var __p = 'var index, iterable = ' +
-    (obj.firstArg) +
-    ', result = ' +
-    (obj.init) +
-    ';\nif (!iterable) return result;\n' +
-    (obj.top) +
-    ';';
-     if (obj.array) {
-    __p += '\nvar length = iterable.length; index = -1;\nif (' +
-    (obj.array) +
-    ') {  ';
-     if (support.unindexedChars) {
-    __p += '\n  if (isString(iterable)) {\n    iterable = iterable.split(\'\')\n  }  ';
-     }
-    __p += '\n  while (++index < length) {\n    ' +
-    (obj.loop) +
-    ';\n  }\n}\nelse {  ';
-     } else if (support.nonEnumArgs) {
-    __p += '\n  var length = iterable.length; index = -1;\n  if (length && isArguments(iterable)) {\n    while (++index < length) {\n      index += \'\';\n      ' +
-    (obj.loop) +
-    ';\n    }\n  } else {  ';
-     }
+    if (support.enumPrototypes) {
+      __p += "\n  var skipProto = typeof iterable == 'function';\n  ";
+    }
 
-     if (support.enumPrototypes) {
-    __p += '\n  var skipProto = typeof iterable == \'function\';\n  ';
-     }
+    if (support.enumErrorProps) {
+      __p += '\n  var skipErrorProps = iterable === errorProto || iterable instanceof Error;\n  ';
+    }
 
-     if (support.enumErrorProps) {
-    __p += '\n  var skipErrorProps = iterable === errorProto || iterable instanceof Error;\n  ';
-     }
+    var conditions = [];
+    if (support.enumPrototypes) {
+      conditions.push('!(skipProto && index == "prototype")');
+    }
+    if (support.enumErrorProps) {
+      conditions.push('!(skipErrorProps && (index == "message" || index == "name"))');
+    }
 
-        var conditions = [];    if (support.enumPrototypes) { conditions.push('!(skipProto && index == "prototype")'); }    if (support.enumErrorProps)  { conditions.push('!(skipErrorProps && (index == "message" || index == "name"))'); }
+    if (obj.useHas && obj.keys) {
+      __p +=
+        '\n  var ownIndex = -1,\n      ownProps = objectTypes[typeof iterable] && keys(iterable),\n      length = ownProps ? ownProps.length : 0;\n\n  while (++ownIndex < length) {\n    index = ownProps[ownIndex];\n';
+      if (conditions.length) {
+        __p += '    if (' + conditions.join(' && ') + ') {\n  ';
+      }
+      __p += obj.loop + ';    ';
+      if (conditions.length) {
+        __p += '\n    }';
+      }
+      __p += '\n  }  ';
+    } else {
+      __p += '\n  for (index in iterable) {\n';
+      if (obj.useHas) {
+        conditions.push('hasOwnProperty.call(iterable, index)');
+      }
+      if (conditions.length) {
+        __p += '    if (' + conditions.join(' && ') + ') {\n  ';
+      }
+      __p += obj.loop + ';    ';
+      if (conditions.length) {
+        __p += '\n    }';
+      }
+      __p += '\n  }    ';
+      if (support.nonEnumShadows) {
+        __p +=
+          '\n\n  if (iterable !== objectProto) {\n    var ctor = iterable.constructor,\n        isProto = iterable === (ctor && ctor.prototype),\n        className = iterable === stringProto ? stringClass : iterable === errorProto ? errorClass : toString.call(iterable),\n        nonEnum = nonEnumProps[className];\n      ';
+        for (k = 0; k < 7; k++) {
+          __p +=
+            "\n    index = '" +
+            obj.shadowedProps[k] +
+            "';\n    if ((!(isProto && nonEnum[index]) && hasOwnProperty.call(iterable, index))";
+          if (!obj.useHas) {
+            __p += ' || (!nonEnum[index] && iterable[index] !== objectProto[index])';
+          }
+          __p += ') {\n      ' + obj.loop + ';\n    }      ';
+        }
+        __p += '\n  }    ';
+      }
+    }
 
-     if (obj.useHas && obj.keys) {
-    __p += '\n  var ownIndex = -1,\n      ownProps = objectTypes[typeof iterable] && keys(iterable),\n      length = ownProps ? ownProps.length : 0;\n\n  while (++ownIndex < length) {\n    index = ownProps[ownIndex];\n';
-        if (conditions.length) {
-    __p += '    if (' +
-    (conditions.join(' && ')) +
-    ') {\n  ';
-     }
-    __p +=
-    (obj.loop) +
-    ';    ';
-     if (conditions.length) {
-    __p += '\n    }';
-     }
-    __p += '\n  }  ';
-     } else {
-    __p += '\n  for (index in iterable) {\n';
-        if (obj.useHas) { conditions.push("hasOwnProperty.call(iterable, index)"); }    if (conditions.length) {
-    __p += '    if (' +
-    (conditions.join(' && ')) +
-    ') {\n  ';
-     }
-    __p +=
-    (obj.loop) +
-    ';    ';
-     if (conditions.length) {
-    __p += '\n    }';
-     }
-    __p += '\n  }    ';
-     if (support.nonEnumShadows) {
-    __p += '\n\n  if (iterable !== objectProto) {\n    var ctor = iterable.constructor,\n        isProto = iterable === (ctor && ctor.prototype),\n        className = iterable === stringProto ? stringClass : iterable === errorProto ? errorClass : toString.call(iterable),\n        nonEnum = nonEnumProps[className];\n      ';
-     for (k = 0; k < 7; k++) {
-    __p += '\n    index = \'' +
-    (obj.shadowedProps[k]) +
-    '\';\n    if ((!(isProto && nonEnum[index]) && hasOwnProperty.call(iterable, index))';
-            if (!obj.useHas) {
-    __p += ' || (!nonEnum[index] && iterable[index] !== objectProto[index])';
-     }
-    __p += ') {\n      ' +
-    (obj.loop) +
-    ';\n    }      ';
-     }
-    __p += '\n  }    ';
-     }
+    if (obj.array || support.nonEnumArgs) {
+      __p += '\n}';
+    }
+    __p += obj.bottom + ';\nreturn result';
 
-     }
-
-     if (obj.array || support.nonEnumArgs) {
-    __p += '\n}';
-     }
-    __p +=
-    (obj.bottom) +
-    ';\nreturn result';
-
-    return __p
+    return __p;
   };
 
   /*--------------------------------------------------------------------------*/
@@ -564,8 +595,8 @@
    */
   function baseBind(bindData) {
     var func = bindData[0],
-        partialArgs = bindData[2],
-        thisArg = bindData[4];
+      partialArgs = bindData[2],
+      thisArg = bindData[4];
 
     function bound() {
       // `Function#bind` spec
@@ -582,7 +613,7 @@
       if (this instanceof bound) {
         // ensure `new bound` is an instance of `func`
         var thisBinding = baseCreate(func.prototype),
-            result = func.apply(thisBinding, args || arguments);
+          result = func.apply(thisBinding, args || arguments);
         return isObject(result) ? result : thisBinding;
       }
       return func.apply(thisArg, args || arguments);
@@ -649,8 +680,7 @@
         }
       }
       result = isArr ? ctor(value.length) : {};
-    }
-    else {
+    } else {
       result = isArr ? slice(value) : assign({}, value);
     }
     // add array properties assigned by `RegExp#exec`
@@ -672,7 +702,7 @@
     stackB.push(result);
 
     // recursively populate clone (susceptible to call stack limits)
-    (isArr ? baseEach : forOwn)(value, function(objValue, key) {
+    (isArr ? baseEach : forOwn)(value, function (objValue, key) {
       result[key] = baseClone(objValue, isDeep, callback, stackA, stackB);
     });
 
@@ -696,17 +726,17 @@
   }
   // fallback for browsers without `Object.create`
   if (!nativeCreate) {
-    baseCreate = (function() {
+    baseCreate = (function () {
       function Object() {}
-      return function(prototype) {
+      return function (prototype) {
         if (isObject(prototype)) {
           Object.prototype = prototype;
-          var result = new Object;
+          var result = new Object();
           Object.prototype = null;
         }
         return result || root.Object();
       };
-    }());
+    })();
   }
 
   /**
@@ -750,18 +780,22 @@
       return func;
     }
     switch (argCount) {
-      case 1: return function(value) {
-        return func.call(thisArg, value);
-      };
-      case 2: return function(a, b) {
-        return func.call(thisArg, a, b);
-      };
-      case 3: return function(value, index, collection) {
-        return func.call(thisArg, value, index, collection);
-      };
-      case 4: return function(accumulator, value, index, collection) {
-        return func.call(thisArg, accumulator, value, index, collection);
-      };
+      case 1:
+        return function (value) {
+          return func.call(thisArg, value);
+        };
+      case 2:
+        return function (a, b) {
+          return func.call(thisArg, a, b);
+        };
+      case 3:
+        return function (value, index, collection) {
+          return func.call(thisArg, value, index, collection);
+        };
+      case 4:
+        return function (accumulator, value, index, collection) {
+          return func.call(thisArg, accumulator, value, index, collection);
+        };
     }
     return bind(func, thisArg);
   }
@@ -776,17 +810,17 @@
    */
   function baseCreateWrapper(bindData) {
     var func = bindData[0],
-        bitmask = bindData[1],
-        partialArgs = bindData[2],
-        partialRightArgs = bindData[3],
-        thisArg = bindData[4],
-        arity = bindData[5];
+      bitmask = bindData[1],
+      partialArgs = bindData[2],
+      partialRightArgs = bindData[3],
+      thisArg = bindData[4],
+      arity = bindData[5];
 
     var isBind = bitmask & 1,
-        isBindKey = bitmask & 2,
-        isCurry = bitmask & 4,
-        isCurryBound = bitmask & 8,
-        key = func;
+      isBindKey = bitmask & 2,
+      isCurry = bitmask & 4,
+      isCurryBound = bitmask & 8,
+      key = func;
 
     function bound() {
       var thisBinding = isBind ? thisArg : this;
@@ -801,7 +835,14 @@
         }
         if (isCurry && args.length < arity) {
           bitmask |= 16 & ~32;
-          return baseCreateWrapper([func, (isCurryBound ? bitmask : bitmask & ~3), args, null, thisArg, arity]);
+          return baseCreateWrapper([
+            func,
+            isCurryBound ? bitmask : bitmask & ~3,
+            args,
+            null,
+            thisArg,
+            arity,
+          ]);
         }
       }
       args || (args = arguments);
@@ -843,15 +884,13 @@
     // exit early for identical values
     if (a === b) {
       // treat `+0` vs. `-0` as not equal
-      return a !== 0 || (1 / a == 1 / b);
+      return a !== 0 || 1 / a == 1 / b;
     }
     var type = typeof a,
-        otherType = typeof b;
+      otherType = typeof b;
 
     // exit early for unlike primitive values
-    if (a === a &&
-        !(a && objectTypes[type]) &&
-        !(b && objectTypes[otherType])) {
+    if (a === a && !(a && objectTypes[type]) && !(b && objectTypes[otherType])) {
       return false;
     }
     // exit early for `null` and `undefined` avoiding ES3's Function#call behavior
@@ -861,7 +900,7 @@
     }
     // compare [[Class]] names
     var className = toString.call(a),
-        otherClass = toString.call(b);
+      otherClass = toString.call(b);
 
     if (className == argsClass) {
       className = objectClass;
@@ -881,10 +920,12 @@
 
       case numberClass:
         // treat `NaN` vs. `NaN` as equal
-        return (a != +a)
+        return a != +a
           ? b != +b
-          // but treat `+0` vs. `-0` as not equal
-          : (a == 0 ? (1 / a == 1 / b) : a == +b);
+          : // but treat `+0` vs. `-0` as not equal
+            a == 0
+            ? 1 / a == 1 / b
+            : a == +b;
 
       case regexpClass:
       case stringClass:
@@ -896,10 +937,17 @@
     if (!isArr) {
       // unwrap any `lodash` wrapped values
       var aWrapped = hasOwnProperty.call(a, '__wrapped__'),
-          bWrapped = hasOwnProperty.call(b, '__wrapped__');
+        bWrapped = hasOwnProperty.call(b, '__wrapped__');
 
       if (aWrapped || bWrapped) {
-        return baseIsEqual(aWrapped ? a.__wrapped__ : a, bWrapped ? b.__wrapped__ : b, callback, isWhere, stackA, stackB);
+        return baseIsEqual(
+          aWrapped ? a.__wrapped__ : a,
+          bWrapped ? b.__wrapped__ : b,
+          callback,
+          isWhere,
+          stackA,
+          stackB,
+        );
       }
       // exit for functions and DOM nodes
       if (className != objectClass || (!support.nodeClass && (isNode(a) || isNode(b)))) {
@@ -907,13 +955,20 @@
       }
       // in older versions of Opera, `arguments` objects have `Array` constructors
       var ctorA = !support.argsObject && isArguments(a) ? Object : a.constructor,
-          ctorB = !support.argsObject && isArguments(b) ? Object : b.constructor;
+        ctorB = !support.argsObject && isArguments(b) ? Object : b.constructor;
 
       // non `Object` object instances with different constructors are not equal
-      if (ctorA != ctorB &&
-            !(isFunction(ctorA) && ctorA instanceof ctorA && isFunction(ctorB) && ctorB instanceof ctorB) &&
-            ('constructor' in a && 'constructor' in b)
-          ) {
+      if (
+        ctorA != ctorB &&
+        !(
+          isFunction(ctorA) &&
+          ctorA instanceof ctorA &&
+          isFunction(ctorB) &&
+          ctorB instanceof ctorB
+        ) &&
+        'constructor' in a &&
+        'constructor' in b
+      ) {
         return false;
       }
     }
@@ -948,7 +1003,7 @@
         // deep compare the contents, ignoring non-numeric properties
         while (size--) {
           var index = length,
-              value = b[size];
+            value = b[size];
 
           if (isWhere) {
             while (index--) {
@@ -961,22 +1016,23 @@
           }
         }
       }
-    }
-    else {
+    } else {
       // deep compare objects using `forIn`, instead of `forOwn`, to avoid `Object.keys`
       // which, in this case, is more costly
-      forIn(b, function(value, key, b) {
+      forIn(b, function (value, key, b) {
         if (hasOwnProperty.call(b, key)) {
           // count the number of properties.
           size++;
           // deep compare each property value.
-          return (result = hasOwnProperty.call(a, key) && baseIsEqual(a[key], value, callback, isWhere, stackA, stackB));
+          return (result =
+            hasOwnProperty.call(a, key) &&
+            baseIsEqual(a[key], value, callback, isWhere, stackA, stackB));
         }
       });
 
       if (result && !isWhere) {
         // ensure both objects have the same number of properties
-        forIn(a, function(value, key, a) {
+        forIn(a, function (value, key, a) {
           if (hasOwnProperty.call(a, key)) {
             // `size` will be `-1` if `a` has more properties than `b`
             return (result = --size > -1);
@@ -1031,14 +1087,14 @@
    */
   function createWrapper(func, bitmask, partialArgs, partialRightArgs, thisArg, arity) {
     var isBind = bitmask & 1,
-        isBindKey = bitmask & 2,
-        isCurry = bitmask & 4,
-        isCurryBound = bitmask & 8,
-        isPartial = bitmask & 16,
-        isPartialRight = bitmask & 32;
+      isBindKey = bitmask & 2,
+      isCurry = bitmask & 4,
+      isCurryBound = bitmask & 8,
+      isPartial = bitmask & 16,
+      isPartialRight = bitmask & 32;
 
     if (!isBindKey && !isFunction(func)) {
-      throw new TypeError;
+      throw new TypeError();
     }
     if (isPartial && !partialArgs.length) {
       bitmask &= ~16;
@@ -1083,7 +1139,7 @@
       return createWrapper.apply(null, bindData);
     }
     // fast path for `_.bind`
-    var creater = (bitmask == 1 || bitmask === 17) ? baseBind : baseCreateWrapper;
+    var creater = bitmask == 1 || bitmask === 17 ? baseBind : baseCreateWrapper;
     return creater([func, bitmask, partialArgs, partialRightArgs, thisArg, arity]);
   }
 
@@ -1111,7 +1167,7 @@
     iteratorData.useHas = true;
 
     // merge options into a template data object
-    for (var object, index = 0; object = arguments[index]; index++) {
+    for (var object, index = 0; (object = arguments[index]); index++) {
       for (var key in object) {
         iteratorData[key] = object[key];
       }
@@ -1121,17 +1177,29 @@
 
     // create the function factory
     var factory = Function(
-        'baseCreateCallback, errorClass, errorProto, hasOwnProperty, ' +
+      'baseCreateCallback, errorClass, errorProto, hasOwnProperty, ' +
         'indicatorObject, isArguments, isArray, isString, keys, objectProto, ' +
         'objectTypes, nonEnumProps, stringClass, stringProto, toString',
-      'return function(' + args + ') {\n' + iteratorTemplate(iteratorData) + '\n}'
+      'return function(' + args + ') {\n' + iteratorTemplate(iteratorData) + '\n}',
     );
 
     // return the compiled function
     return factory(
-      baseCreateCallback, errorClass, errorProto, hasOwnProperty,
-      indicatorObject, isArguments, isArray, isString, iteratorData.keys, objectProto,
-      objectTypes, nonEnumProps, stringClass, stringProto, toString
+      baseCreateCallback,
+      errorClass,
+      errorProto,
+      hasOwnProperty,
+      indicatorObject,
+      isArguments,
+      isArray,
+      isString,
+      iteratorData.keys,
+      objectProto,
+      objectTypes,
+      nonEnumProps,
+      stringClass,
+      stringProto,
+      toString,
     );
   }
 
@@ -1153,10 +1221,12 @@
    * @param {Function} func The function to set data on.
    * @param {Array} value The data array to set.
    */
-  var setBindData = !defineProperty ? noop : function(func, value) {
-    descriptor.value = value;
-    defineProperty(func, '__bindData__', descriptor);
-  };
+  var setBindData = !defineProperty
+    ? noop
+    : function (func, value) {
+        descriptor.value = value;
+        defineProperty(func, '__bindData__', descriptor);
+      };
 
   /*--------------------------------------------------------------------------*/
 
@@ -1177,14 +1247,25 @@
    * // => false
    */
   function isArguments(value) {
-    return value && typeof value == 'object' && typeof value.length == 'number' &&
-      toString.call(value) == argsClass || false;
+    return (
+      (value &&
+        typeof value == 'object' &&
+        typeof value.length == 'number' &&
+        toString.call(value) == argsClass) ||
+      false
+    );
   }
   // fallback for browsers that can't detect `arguments` objects by [[Class]]
   if (!support.argsClass) {
-    isArguments = function(value) {
-      return value && typeof value == 'object' && typeof value.length == 'number' &&
-        hasOwnProperty.call(value, 'callee') && !propertyIsEnumerable.call(value, 'callee') || false;
+    isArguments = function (value) {
+      return (
+        (value &&
+          typeof value == 'object' &&
+          typeof value.length == 'number' &&
+          hasOwnProperty.call(value, 'callee') &&
+          !propertyIsEnumerable.call(value, 'callee')) ||
+        false
+      );
     };
   }
 
@@ -1205,10 +1286,17 @@
    * _.isArray([1, 2, 3]);
    * // => true
    */
-  var isArray = nativeIsArray || function(value) {
-    return value && typeof value == 'object' && typeof value.length == 'number' &&
-      toString.call(value) == arrayClass || false;
-  };
+  var isArray =
+    nativeIsArray ||
+    function (value) {
+      return (
+        (value &&
+          typeof value == 'object' &&
+          typeof value.length == 'number' &&
+          toString.call(value) == arrayClass) ||
+        false
+      );
+    };
 
   /**
    * A fallback implementation of `Object.keys` which produces an array of the
@@ -1220,10 +1308,10 @@
    * @returns {Array} Returns an array of property names.
    */
   var shimKeys = createIterator({
-    'args': 'object',
-    'init': '[]',
-    'top': 'if (!(objectTypes[typeof object])) return result',
-    'loop': 'result.push(index)'
+    args: 'object',
+    init: '[]',
+    top: 'if (!(objectTypes[typeof object])) return result',
+    loop: 'result.push(index)',
   });
 
   /**
@@ -1239,45 +1327,49 @@
    * _.keys({ 'one': 1, 'two': 2, 'three': 3 });
    * // => ['one', 'two', 'three'] (property order is not guaranteed across environments)
    */
-  var keys = !nativeKeys ? shimKeys : function(object) {
-    if (!isObject(object)) {
-      return [];
-    }
-    if ((support.enumPrototypes && typeof object == 'function') ||
-        (support.nonEnumArgs && object.length && isArguments(object))) {
-      return shimKeys(object);
-    }
-    return nativeKeys(object);
-  };
+  var keys = !nativeKeys
+    ? shimKeys
+    : function (object) {
+        if (!isObject(object)) {
+          return [];
+        }
+        if (
+          (support.enumPrototypes && typeof object == 'function') ||
+          (support.nonEnumArgs && object.length && isArguments(object))
+        ) {
+          return shimKeys(object);
+        }
+        return nativeKeys(object);
+      };
 
   /** Reusable iterator options shared by `each`, `forIn`, and `forOwn` */
   var eachIteratorOptions = {
-    'args': 'collection, callback, thisArg',
-    'top': "callback = callback && typeof thisArg == 'undefined' ? callback : baseCreateCallback(callback, thisArg, 3)",
-    'array': "typeof length == 'number'",
-    'keys': keys,
-    'loop': 'if (callback(iterable[index], index, collection) === false) return result'
+    args: 'collection, callback, thisArg',
+    top: "callback = callback && typeof thisArg == 'undefined' ? callback : baseCreateCallback(callback, thisArg, 3)",
+    array: "typeof length == 'number'",
+    keys: keys,
+    loop: 'if (callback(iterable[index], index, collection) === false) return result',
   };
 
   /** Reusable iterator options for `assign` and `defaults` */
   var defaultsIteratorOptions = {
-    'args': 'object, source, guard',
-    'top':
+    args: 'object, source, guard',
+    top:
       'var args = arguments,\n' +
       '    argsIndex = 0,\n' +
       "    argsLength = typeof guard == 'number' ? 2 : args.length;\n" +
       'while (++argsIndex < argsLength) {\n' +
       '  iterable = args[argsIndex];\n' +
       '  if (iterable && objectTypes[typeof iterable]) {',
-    'keys': keys,
-    'loop': "if (typeof result[index] == 'undefined') result[index] = iterable[index]",
-    'bottom': '  }\n}'
+    keys: keys,
+    loop: "if (typeof result[index] == 'undefined') result[index] = iterable[index]",
+    bottom: '  }\n}',
   };
 
   /** Reusable iterator options for `forIn` and `forOwn` */
   var forOwnIteratorOptions = {
-    'top': 'if (!objectTypes[typeof iterable]) return result;\n' + eachIteratorOptions.top,
-    'array': false
+    top: 'if (!objectTypes[typeof iterable]) return result;\n' + eachIteratorOptions.top,
+    array: false,
   };
 
   /**
@@ -1329,16 +1421,16 @@
    * // => { 'name': 'barney', 'employer': 'slate' }
    */
   var assign = createIterator(defaultsIteratorOptions, {
-    'top':
-      defaultsIteratorOptions.top.replace(';',
-        ';\n' +
+    top: defaultsIteratorOptions.top.replace(
+      ';',
+      ';\n' +
         "if (argsLength > 3 && typeof args[argsLength - 2] == 'function') {\n" +
         '  var callback = baseCreateCallback(args[--argsLength - 1], args[argsLength--], 2);\n' +
         "} else if (argsLength > 2 && typeof args[argsLength - 1] == 'function') {\n" +
         '  callback = args[--argsLength];\n' +
-        '}'
-      ),
-    'loop': 'result[index] = callback ? callback(result[index], iterable[index]) : iterable[index]'
+        '}',
+    ),
+    loop: 'result[index] = callback ? callback(result[index], iterable[index]) : iterable[index]',
   });
 
   /**
@@ -1389,7 +1481,11 @@
       callback = isDeep;
       isDeep = false;
     }
-    return baseClone(value, isDeep, typeof callback == 'function' && baseCreateCallback(callback, thisArg, 1));
+    return baseClone(
+      value,
+      isDeep,
+      typeof callback == 'function' && baseCreateCallback(callback, thisArg, 1),
+    );
   }
 
   /**
@@ -1424,7 +1520,7 @@
    * // => logs 'x', 'y', and 'move' (property order is not guaranteed across environments)
    */
   var forIn = createIterator(eachIteratorOptions, forOwnIteratorOptions, {
-    'useHas': false
+    useHas: false,
   });
 
   /**
@@ -1468,7 +1564,7 @@
   }
   // fallback for older versions of Chrome and Safari
   if (isFunction(/x/)) {
-    isFunction = function(value) {
+    isFunction = function (value) {
       return typeof value == 'function' && toString.call(value) == funcClass;
     };
   }
@@ -1515,8 +1611,11 @@
    * // => true
    */
   function isString(value) {
-    return typeof value == 'string' ||
-      value && typeof value == 'object' && toString.call(value) == stringClass || false;
+    return (
+      typeof value == 'string' ||
+      (value && typeof value == 'object' && toString.call(value) == stringClass) ||
+      false
+    );
   }
 
   /*--------------------------------------------------------------------------*/
@@ -1567,7 +1666,7 @@
 
     if (isArray(collection)) {
       var index = -1,
-          length = collection.length;
+        length = collection.length;
 
       while (++index < length) {
         var value = collection[index];
@@ -1576,7 +1675,7 @@
         }
       }
     } else {
-      baseEach(collection, function(value, index, collection) {
+      baseEach(collection, function (value, index, collection) {
         if (callback(value, index, collection)) {
           result.push(value);
         }
@@ -1614,7 +1713,7 @@
   function forEach(collection, callback, thisArg) {
     if (callback && typeof thisArg == 'undefined' && isArray(collection)) {
       var index = -1,
-          length = collection.length;
+        length = collection.length;
 
       while (++index < length) {
         if (callback(collection[index], index, collection) === false) {
@@ -1668,8 +1767,8 @@
    */
   function map(collection, callback, thisArg) {
     var index = -1,
-        length = collection ? collection.length : 0,
-        result = Array(typeof length == 'number' ? length : 0);
+      length = collection ? collection.length : 0,
+      result = Array(typeof length == 'number' ? length : 0);
 
     callback = lodash.createCallback(callback, thisArg, 3);
     if (isArray(collection)) {
@@ -1677,7 +1776,7 @@
         result[index] = callback(collection[index], index, collection);
       }
     } else {
-      baseEach(collection, function(value, key, collection) {
+      baseEach(collection, function (value, key, collection) {
         result[++index] = callback(value, key, collection);
       });
     }
@@ -1720,7 +1819,7 @@
 
     if (isArray(collection)) {
       var index = -1,
-          length = collection.length;
+        length = collection.length;
 
       if (noaccum) {
         accumulator = collection[++index];
@@ -1729,10 +1828,10 @@
         accumulator = callback(accumulator, collection[index], index, collection);
       }
     } else {
-      baseEach(collection, function(value, index, collection) {
+      baseEach(collection, function (value, index, collection) {
         accumulator = noaccum
-          ? (noaccum = false, value)
-          : callback(accumulator, value, index, collection)
+          ? ((noaccum = false), value)
+          : callback(accumulator, value, index, collection);
       });
     }
     return accumulator;
@@ -1786,7 +1885,7 @@
 
     if (isArray(collection)) {
       var index = -1,
-          length = collection.length;
+        length = collection.length;
 
       while (++index < length) {
         if ((result = callback(collection[index], index, collection))) {
@@ -1794,7 +1893,7 @@
         }
       }
     } else {
-      baseEach(collection, function(value, index, collection) {
+      baseEach(collection, function (value, index, collection) {
         return !(result = callback(value, index, collection));
       });
     }
@@ -1874,21 +1973,21 @@
       return property(func);
     }
     var props = keys(func),
-        key = props[0],
-        a = func[key];
+      key = props[0],
+      a = func[key];
 
     // handle "_.where" style callback shorthands
     if (props.length == 1 && a === a && !isObject(a)) {
       // fast path the common case of providing an object with a single
       // property containing a primitive value
-      return function(object) {
+      return function (object) {
         var b = object[key];
-        return a === b && (a !== 0 || (1 / a == 1 / b));
+        return a === b && (a !== 0 || 1 / a == 1 / b);
       };
     }
-    return function(object) {
+    return function (object) {
       var length = props.length,
-          result = false;
+        result = false;
 
       while (length--) {
         if (!(result = baseIsEqual(object[props[length]], func[props[length]], null, true))) {
@@ -1958,7 +2057,7 @@
    * // => [{ 'name': 'barney', 'age': 36 }, { 'name': 'fred',   'age': 40 }]
    */
   function property(key) {
-    return function(object) {
+    return function (object) {
       return object[key];
     };
   }
@@ -1992,14 +2091,13 @@
    */
   function random(min, max, floating) {
     var noMin = min == null,
-        noMax = max == null;
+      noMax = max == null;
 
     if (floating == null) {
       if (typeof min == 'boolean' && noMax) {
         floating = min;
         min = 1;
-      }
-      else if (!noMax && typeof max == 'boolean') {
+      } else if (!noMax && typeof max == 'boolean') {
         floating = max;
         noMax = true;
       }
@@ -2016,7 +2114,10 @@
     }
     if (floating || min % 1 || max % 1) {
       var rand = nativeRandom();
-      return nativeMin(min + (rand * (max - min + parseFloat('1e-' + ((rand +'').length - 1)))), max);
+      return nativeMin(
+        min + rand * (max - min + parseFloat('1e-' + ((rand + '').length - 1))),
+        max,
+      );
     }
     return baseRandom(min, max);
   }
@@ -2073,8 +2174,6 @@
   /*--------------------------------------------------------------------------*/
 
   if (freeExports && freeModule) {
-
-      freeExports._ = lodash;
+    freeExports._ = lodash;
   }
-
-}.call(this));
+}).call(this);

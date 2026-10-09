@@ -1,7 +1,13 @@
 import _ from './util';
-import type {Creature, CreatureAction, CreatureInitializer, CreatureOptions, Neighbor} from './types';
+import type {
+  Creature,
+  CreatureAction,
+  CreatureInitializer,
+  CreatureOptions,
+  Neighbor,
+} from './types';
 
-type CreatureConstructor = (new(options?: CreatureOptions) => Creature) & {prototype: Creature};
+type CreatureConstructor = (new (options?: CreatureOptions) => Creature) & {prototype: Creature};
 interface CreatureFactory {
   make(type: string | false | undefined, options?: CreatureOptions): Creature | false;
   registerCreature(options: CreatureOptions, init?: CreatureInitializer): boolean;
@@ -17,7 +23,6 @@ var factory: CreatureFactory = (function () {
     this.age = -1;
   }
 
-
   // The legacy function constructors back the dynamically registered prototype chains.
   const BaseCreatureConstructor = baseCreature as unknown as new () => Creature;
   const BaseCAConstructor = baseCA as unknown as new () => Creature;
@@ -28,12 +33,11 @@ var factory: CreatureFactory = (function () {
   baseCreature.prototype.actionRadius = 1;
   baseCreature.prototype.sustainability = 2;
   // used as percentages of maxEnergy
-  baseCreature.prototype.reproduceLv = 0.70;
+  baseCreature.prototype.reproduceLv = 0.7;
   baseCreature.prototype.moveLv = 0;
 
   baseCreature.prototype.boundEnergy = function (this: Creature) {
-    if (this.energy! > this.maxEnergy!)
-      this.energy = this.maxEnergy!;
+    if (this.energy! > this.maxEnergy!) this.energy = this.maxEnergy!;
   };
 
   baseCreature.prototype.isDead = function (this: Creature) {
@@ -50,10 +54,10 @@ var factory: CreatureFactory = (function () {
       var coords = step.coords;
       var creature = factory.make(this.type);
 
-      var successFn = (function (this: Creature) {
+      var successFn = function (this: Creature) {
         this.energy! -= this.initialEnergy!;
         return true;
-      }).bind(this);
+      }.bind(this);
       var failureFn = this.wait;
 
       return {
@@ -61,7 +65,7 @@ var factory: CreatureFactory = (function () {
         y: coords.y,
         creature: creature,
         successFn: successFn,
-        failureFn: failureFn
+        failureFn: failureFn,
       };
     } else return false;
   };
@@ -70,9 +74,12 @@ var factory: CreatureFactory = (function () {
     var creature = this;
 
     // first, look for creatures to eat
-    var spots = _.filter(neighbors, (function (this: Creature, spot: Neighbor) {
-      return spot.creature ? spot.creature.size! < this.size! : false;
-    }).bind(this));
+    var spots = _.filter(
+      neighbors,
+      function (this: Creature, spot: Neighbor) {
+        return spot.creature ? spot.creature.size! < this.size! : false;
+      }.bind(this),
+    );
 
     // if there's not enough food, try to move
     if (spots.length < this.sustainability!) {
@@ -88,19 +95,19 @@ var factory: CreatureFactory = (function () {
 
       var coords = step.coords;
 
-      var successFn = (function (this: Creature) {
+      var successFn = function (this: Creature) {
         var foodEnergy = (step.creature ? step.creature.energy : undefined)! * this.efficiency!;
         // add foodEnergy if eating, subtract 10 if moving
         this.energy = this.energy! + (foodEnergy || -10);
         // clear the original location
         return false;
-      }).bind(this);
+      }.bind(this);
 
       return {
         x: coords.x,
         y: coords.y,
         creature: creature,
-        successFn: successFn
+        successFn: successFn,
       };
     } else return false;
   };
@@ -110,7 +117,12 @@ var factory: CreatureFactory = (function () {
     return true;
   };
 
-  baseCreature.prototype.process = function (this: Creature, neighbors: Neighbor[], x: number, y: number) {
+  baseCreature.prototype.process = function (
+    this: Creature,
+    neighbors: Neighbor[],
+    x: number,
+    y: number,
+  ) {
     var step: CreatureAction | false = {x: 0, y: 0, creature: false};
     var maxEnergy = this.maxEnergy;
 
@@ -129,15 +141,22 @@ var factory: CreatureFactory = (function () {
         x: step.x,
         y: step.y,
         creature: creature,
-        observed: true
+        observed: true,
       };
     } else return this.energy !== this.maxEnergy;
   };
 
   baseCA.prototype.actionRadius = 1;
   baseCA.prototype.boundEnergy = function (this: Creature) {};
-  baseCA.prototype.isDead = function (this: Creature) { return false; };
-  baseCA.prototype.process = function (this: Creature, neighbors: Neighbor[], x: number, y: number) {};
+  baseCA.prototype.isDead = function (this: Creature) {
+    return false;
+  };
+  baseCA.prototype.process = function (
+    this: Creature,
+    neighbors: Neighbor[],
+    x: number,
+    y: number,
+  ) {};
   baseCA.prototype.wait = function (this: Creature) {};
 
   // Storage for our creature types
@@ -146,7 +165,7 @@ var factory: CreatureFactory = (function () {
   return {
     make: function (type: string | false | undefined, options?: CreatureOptions): Creature | false {
       var CreatureType = types[String(type)];
-      return (CreatureType ? new CreatureType(options) : false);
+      return CreatureType ? new CreatureType(options) : false;
     },
 
     registerCreature: function (options: CreatureOptions, init?: CreatureInitializer) {
@@ -156,14 +175,14 @@ var factory: CreatureFactory = (function () {
         // set the constructor, including init if it's defined
         // These dynamic constructors get their typed prototype directly below.
         if (typeof init === 'function') {
-          types[type] = (function (this: Creature) {
+          types[type] = function (this: Creature) {
             this.energy = this.initialEnergy;
             init.call(this);
-          }) as unknown as CreatureConstructor;
+          } as unknown as CreatureConstructor;
         } else {
-          types[type] = (function (this: Creature) {
+          types[type] = function (this: Creature) {
             this.energy = this.initialEnergy;
-          }) as unknown as CreatureConstructor;
+          } as unknown as CreatureConstructor;
         }
 
         var color = options.color || options.colour;
@@ -192,10 +211,12 @@ var factory: CreatureFactory = (function () {
       if (typeof type === 'string' && typeof types[type] === 'undefined') {
         // set the constructor, including init if it's defined
         // These dynamic constructors get their typed prototype directly below.
-        types[type] = (typeof init === 'function' ?
-           function (this: Creature) { init.call(this); } :
-           function (this: Creature) {}) as unknown as CreatureConstructor;
-        var color = options.color = options.color || options.colour;
+        types[type] = (typeof init === 'function'
+          ? function (this: Creature) {
+              init.call(this);
+            }
+          : function (this: Creature) {}) as unknown as CreatureConstructor;
+        var color = (options.color = options.color || options.colour);
         // set the color randomly if none is provided
         if (typeof color !== 'object' || color.length !== 3) {
           options.color = [_.random(255), _.random(255), _.random(255)];
@@ -212,7 +233,7 @@ var factory: CreatureFactory = (function () {
 
         return true;
       } else return false;
-    }
+    },
   };
 })();
 

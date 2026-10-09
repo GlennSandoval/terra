@@ -3,7 +3,10 @@ import _ from './util';
 
 test('von Neumann neighbors stay inside non-periodic bounds', () => {
   const neighbors = _.getNeighborCoordsFn(3, 3, true, false)(0, 0, 1);
-  expect(neighbors).toEqual([{x: 0, y: 1}, {x: 1, y: 0}]);
+  expect(neighbors).toEqual([
+    {x: 0, y: 1},
+    {x: 1, y: 0},
+  ]);
 });
 
 test('periodic Moore neighbors wrap across grid edges', () => {

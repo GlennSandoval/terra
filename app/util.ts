@@ -2,7 +2,6 @@ import seedrandom from 'seedrandom';
 import customLodash from '../lodash_custom/lodash.custom.min.js';
 import type {NeighborCoordinates, WeightedCreature} from './types';
 
-
 seedrandom('terra :)', {global: true});
 var _ = customLodash._;
 
@@ -15,22 +14,32 @@ var _ = customLodash._;
  * @param  {int} radius - (default = 1) neighbor radius
  * @return {array}      - an array of [x, y] pairs of the neighboring cells
  */
-_.getNeighborCoordsFn = function (xMax: number, yMax: number, vonNeumann: boolean, periodic: boolean | undefined): NeighborCoordinates {
+_.getNeighborCoordsFn = function (
+  xMax: number,
+  yMax: number,
+  vonNeumann: boolean,
+  periodic: boolean | undefined,
+): NeighborCoordinates {
   if (periodic) {
     if (vonNeumann) {
       // periodic von neumann
       return function (x0, y0, radius) {
-        var coords = [], x, rX, y, rY, rYMax;
+        var coords = [],
+          x,
+          rX,
+          y,
+          rY,
+          rYMax;
 
         for (rX = -radius; rX <= radius; ++rX) {
           rYMax = radius - Math.abs(rX);
           for (rY = -rYMax; rY <= rYMax; ++rY) {
-            x = ((rX + x0) % xMax + xMax) % xMax;
-            y = ((rY + y0) % yMax + yMax) % yMax;
+            x = (((rX + x0) % xMax) + xMax) % xMax;
+            y = (((rY + y0) % yMax) + yMax) % yMax;
             if (x !== x0 || y !== y0) {
               coords.push({
                 x: x,
-                y: y
+                y: y,
               });
             }
           }
@@ -38,11 +47,16 @@ _.getNeighborCoordsFn = function (xMax: number, yMax: number, vonNeumann: boolea
 
         return coords;
       };
-    }
-    else {
+    } else {
       // periodic moore
       return function (x0, y0, radius) {
-        var coords = [], x, xLo, xHi, y, yLo, yHi;
+        var coords = [],
+          x,
+          xLo,
+          xHi,
+          y,
+          yLo,
+          yHi;
 
         xLo = x0 - radius;
         yLo = y0 - radius;
@@ -53,8 +67,8 @@ _.getNeighborCoordsFn = function (xMax: number, yMax: number, vonNeumann: boolea
           for (y = yLo; y <= yHi; ++y) {
             if (x !== x0 || y !== y0) {
               coords.push({
-                x: (x % xMax + xMax) % xMax,
-                y: (y % yMax + yMax) % yMax
+                x: ((x % xMax) + xMax) % xMax,
+                y: ((y % yMax) + yMax) % yMax,
               });
             }
           }
@@ -71,17 +85,22 @@ _.getNeighborCoordsFn = function (xMax: number, yMax: number, vonNeumann: boolea
     if (vonNeumann) {
       //non-periodic von-neumann
       return function (x0, y0, radius) {
-        var coords = [], x, rX, y, rY, rYMax;
+        var coords = [],
+          x,
+          rX,
+          y,
+          rY,
+          rYMax;
 
         for (rX = -radius; rX <= radius; ++rX) {
           rYMax = radius - Math.abs(rX);
           for (rY = -rYMax; rY <= rYMax; ++rY) {
             x = rX + x0;
             y = rY + y0;
-            if (x >= 0 && y >=0 && x <= xMax && y <= yMax && (x !== x0 || y !== y0)) {
+            if (x >= 0 && y >= 0 && x <= xMax && y <= yMax && (x !== x0 || y !== y0)) {
               coords.push({
                 x: x,
-                y: y
+                y: y,
               });
             }
           }
@@ -89,11 +108,16 @@ _.getNeighborCoordsFn = function (xMax: number, yMax: number, vonNeumann: boolea
 
         return coords;
       };
-    }
-    else {
+    } else {
       // non-periodic moore
       return function (x0, y0, radius) {
-        var coords = [], x, xLo, xHi, y, yLo, yHi;
+        var coords = [],
+          x,
+          xLo,
+          xHi,
+          y,
+          yLo,
+          yHi;
 
         xLo = Math.max(0, x0 - radius);
         yLo = Math.max(0, y0 - radius);
@@ -101,9 +125,7 @@ _.getNeighborCoordsFn = function (xMax: number, yMax: number, vonNeumann: boolea
         yHi = Math.min(y0 + radius, yMax);
 
         for (x = xLo; x <= xHi; ++x)
-          for (y = yLo; y <= yHi; ++y)
-            if (x !== x0 || y !== y0)
-              coords.push({ x: x, y: y });
+          for (y = yLo; y <= yHi; ++y) if (x !== x0 || y !== y0) coords.push({x: x, y: y});
 
         return coords;
       };
@@ -112,13 +134,14 @@ _.getNeighborCoordsFn = function (xMax: number, yMax: number, vonNeumann: boolea
 };
 
 _.pickRandomWeighted = function (weightedArrays: WeightedCreature[]): string | false {
-  var sum = 0, rand = _.random(100, true);
+  var sum = 0,
+    rand = _.random(100, true);
   for (var i = 0; i < weightedArrays.length; i++) {
     var cur = weightedArrays[i];
     sum += cur[1];
     if (sum > rand) return cur[0];
-  } return false;
+  }
+  return false;
 };
 
 export default _;
-

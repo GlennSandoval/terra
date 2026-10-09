@@ -36,9 +36,11 @@ test('reproduction creates a child and charges the parent on success', () => {
 
 test('registered cellular automata retain their initializer and never die', () => {
   const type = 'creature.spec.ca';
-  expect(factory.registerCA({type, color: [4, 5, 6]}, function (this: Creature) {
-    this.initialized = true;
-  })).toBe(true);
+  expect(
+    factory.registerCA({type, color: [4, 5, 6]}, function (this: Creature) {
+      this.initialized = true;
+    }),
+  ).toBe(true);
 
   const cell = factory.make(type);
   if (cell === false) throw new Error('registered automaton was not created');

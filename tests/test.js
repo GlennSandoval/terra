@@ -14,17 +14,17 @@ test('browser bundle applies periodic boundaries to von Neumann neighbors', () =
     document: {
       createElement: () => ({
         style: {},
-        getContext: () => ({scale() {}})
+        getContext: () => ({scale() {}}),
       }),
-      body: {appendChild() {}}
+      body: {appendChild() {}},
     },
-    devicePixelRatio: 1
+    devicePixelRatio: 1,
   };
   context.window = context;
   vm.runInNewContext(fs.readFileSync('dist/terra.min.js', 'utf8'), context);
   const grid = new context.window.terra.Terrarium(3, 3, {
     neighborhood: 'vonneumann',
-    periodic: true
+    periodic: true,
   });
   const neighbors = Array.from(grid.getNeighborCoords(0, 0, 1), ({x, y}) => `${x},${y}`);
   assert.deepEqual(neighbors.sort(), ['0,1', '0,2', '1,0', '2,0']);

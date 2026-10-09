@@ -9,10 +9,14 @@ Use Bun 1.3.14 to manage dependencies and run checks:
 
 ```sh
 bun install
+bun run format
+bun run check
 bun run typecheck
 bun run test
 bun run test:smoke
 ```
+
+`bun run check` runs Biome's formatter and linter; `bun run format` applies formatting.
 
 `bun run typecheck` checks application sources and co-located `.spec.ts` files. `bun run test` runs unit specs
 and the type check; `bun run test:smoke` builds the library and smoke-checks the package entry and browser bundle. To build without running

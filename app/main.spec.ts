@@ -16,14 +16,14 @@ test('public registration exports populate Terrarium grids', () => {
   const createElement = () => ({style: {}, getContext: () => ({scale() {}})});
   Object.defineProperty(globalThis, 'document', {
     configurable: true,
-    value: {createElement, body: {appendChild() {}}}
+    value: {createElement, body: {appendChild() {}}},
   });
   Object.defineProperty(globalThis, 'window', {configurable: true, value: {devicePixelRatio: 1}});
 
   expect(registerCreature({type: creatureType, color: [1, 2, 3], initialEnergy: 30})).toBe(true);
   expect(registerCA({type: caType, color: [4, 5, 6]})).toBe(true);
   const terrarium = new Terrarium(2, 1);
-  const grid = terrarium.makeGrid((x) => x === 0 ? creatureType : caType);
+  const grid = terrarium.makeGrid((x) => (x === 0 ? creatureType : caType));
 
   expect(grid[0][0]).toMatchObject({type: creatureType, energy: 30});
   expect(grid[1][0]).toMatchObject({type: caType});

@@ -8,6 +8,8 @@
     "prebuild": "mkdir -p dist",
     "build": "rollup --config && terser dist/terra.js --compress --mangle --output dist/terra.min.js",
     "prepack": "bun run build",
+    "check": "biome check .",
+    "format": "biome format --write .",
     "typecheck": "tsc --noEmit",
     "test": "bun test app && bun run typecheck",
     "test:smoke": "bun run build && bun test ./tests/test.js"
@@ -21,6 +23,7 @@
   "author": "rileyjshaw <i@rileyjshaw.com>",
   "license": "MIT",
   "devDependencies": {
+    "@biomejs/biome": "^2.5.15",
     "@rollup/plugin-commonjs": "^29.0.3",
     "@rollup/plugin-node-resolve": "^16.0.3",
     "@rollup/plugin-typescript": "^12.3.0",

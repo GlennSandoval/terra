@@ -1,13 +1,20 @@
 // Creates an HD canvas element on page and
 // returns a reference to the element
 import type {Color} from './types';
-var createCanvasElement = function (width: number, height: number, cellSize: number, id?: string, insertAfter?: Element, background?: Color): HTMLCanvasElement {
+var createCanvasElement = function (
+  width: number,
+  height: number,
+  cellSize: number,
+  id?: string,
+  insertAfter?: Element,
+  background?: Color,
+): HTMLCanvasElement {
   width *= cellSize;
   height *= cellSize;
 
   // Creates a scaled-up canvas based on the device's
   // resolution, then displays it properly using styles
-  function createHDCanvas () {
+  function createHDCanvas() {
     var canvas = document.createElement('canvas');
     var ctx = canvas.getContext('2d')!;
 
@@ -21,11 +28,13 @@ var createCanvasElement = function (width: number, height: number, cellSize: num
         backingStorePixelRatio?: number;
       };
       var dpr = window.devicePixelRatio || 1;
-      var bsr = ctx.webkitBackingStorePixelRatio ||
-                ctx.mozBackingStorePixelRatio ||
-                ctx.msBackingStorePixelRatio ||
-                ctx.oBackingStorePixelRatio ||
-                ctx.backingStorePixelRatio || 1;
+      var bsr =
+        ctx.webkitBackingStorePixelRatio ||
+        ctx.mozBackingStorePixelRatio ||
+        ctx.msBackingStorePixelRatio ||
+        ctx.oBackingStorePixelRatio ||
+        ctx.backingStorePixelRatio ||
+        1;
       return dpr / bsr;
     })();
 

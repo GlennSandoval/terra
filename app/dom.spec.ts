@@ -4,15 +4,22 @@ import {createCanvasElement} from './dom';
 test('creates a scaled canvas, applies options, and appends it to the page', () => {
   const scales: number[][] = [];
   const appended: HTMLCanvasElement[] = [];
-  const createElement = () => ({
-    width: 0,
-    height: 0,
-    style: {} as CSSStyleDeclaration,
-    getContext: () => ({scale: (x: number, y: number) => scales.push([x, y]), webkitBackingStorePixelRatio: 1})
-  } as unknown as HTMLCanvasElement);
+  const createElement = () =>
+    ({
+      width: 0,
+      height: 0,
+      style: {} as CSSStyleDeclaration,
+      getContext: () => ({
+        scale: (x: number, y: number) => scales.push([x, y]),
+        webkitBackingStorePixelRatio: 1,
+      }),
+    }) as unknown as HTMLCanvasElement;
   Object.defineProperty(globalThis, 'document', {
     configurable: true,
-    value: {createElement, body: {appendChild: (canvas: HTMLCanvasElement) => appended.push(canvas)}}
+    value: {
+      createElement,
+      body: {appendChild: (canvas: HTMLCanvasElement) => appended.push(canvas)},
+    },
   });
   Object.defineProperty(globalThis, 'window', {configurable: true, value: {devicePixelRatio: 2}});
 
