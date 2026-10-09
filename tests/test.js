@@ -1,9 +1,9 @@
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const vm = require('node:vm');
-const test = require('node:test');
+const test = require('bun:test').test;
 
-test('npm entry rejects duplicate creature types', () => {
+test('package entry rejects duplicate creature types', () => {
   const terra = require('..');
   assert.equal(terra.registerCA({type: 'alive', color: [0, 0, 0]}), true);
   assert.equal(terra.registerCA({type: 'alive', color: [0, 0, 0]}), false);

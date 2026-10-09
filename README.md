@@ -5,17 +5,17 @@ JS library for cellular automata and simple biological simulations. Documentatio
 
 ## Hacking this library
 
-Use Node.js 24 and npm:
+Use Bun 1.3.14 to manage dependencies and run checks:
 
 ```sh
-npm ci
-npm test
+bun install
+bun run test
 ```
 
-`npm test` builds the library and checks the Node package entry and browser bundle.
-To build without running tests, use `npm run build`. Rollup produces the UMD
-bundle `dist/terra.js`; Terser writes `dist/terra.min.js`. The latter is the
-npm package entry and exposes `terra` in browsers. Demo sources are not
+`bun run test` builds the library and checks the package entry and browser
+bundle. To build without running tests, use `bun run build`. Rollup produces
+the UMD bundle `dist/terra.js`; Terser writes `dist/terra.min.js`. The latter
+is the package entry and exposes `terra` in browsers. Demo sources are not
 included in this repo, so the former Bower/Gulp demo tasks are not part of
 this build.
 
