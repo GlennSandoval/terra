@@ -9,11 +9,13 @@ Use Bun 1.3.14 to manage dependencies and run checks:
 
 ```sh
 bun install
+bun run typecheck
+bun run test
 bun run test:smoke
 ```
 
-`bun run test:smoke` builds the library, type-checks the TypeScript sources in `app/`,
-and smoke-checks the package entry and browser bundle. To build without running
+`bun run typecheck` checks source and type-contract specs. `bun run test` runs unit specs
+and the type check; `bun run test:smoke` builds the library and smoke-checks the package entry and browser bundle. To build without running
 the smoke test, use `bun run build`. Rollup produces the UMD bundle `dist/terra.js`; Terser
 writes `dist/terra.min.js`. The latter is the package entry and exposes `terra`
 in browsers. Demo sources are not included in this repo, so the former

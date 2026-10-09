@@ -7,5 +7,7 @@
     "noEmitOnError": true,
     "skipLibCheck": true
   },
-  "include": ["app/**/*.ts"]
+  "files": ["app/types.spec.ts", "app/vendor.d.spec.ts"],
+  "include": ["app/**/*.ts"],
+  "exclude": ["app/**/*.spec.ts"]
 }

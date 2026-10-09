@@ -8,6 +8,8 @@
     "prebuild": "mkdir -p dist",
     "build": "rollup --config && terser dist/terra.js --compress --mangle --output dist/terra.min.js",
     "prepack": "bun run build",
+    "typecheck": "tsc --noEmit",
+    "test": "bun test app && bun run typecheck",
     "test:smoke": "bun run build && bun test ./tests/test.js"
   },
   "keywords": [
