@@ -1,0 +1,44 @@
+.fullPage.splash {
+  position: relative;
+  overflow: hidden;
+}
+
+#heroCanvas,
+.hero-canvas {
+  position: absolute;
+  inset: 0;
+}
+
+.hero-canvas {
+  z-index: 0;
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+#header {
+  position: relative;
+  z-index: 1;
+}
+
+.simulation {
+  margin: 1.25rem 0;
+}
+
+.demo-canvas {
+  display: block;
+  margin: 0.5rem 0;
+}
+
+.simulation-control {
+  padding: 0.45em 0.9em;
+  border: 1px solid #777;
+  border-radius: 0.25em;
+  background: #272822;
+  color: #f8f8f2;
+  cursor: pointer;
+  font: inherit;
+}
+
+.hero-control {
+  margin: 0.75rem 0;
+}
