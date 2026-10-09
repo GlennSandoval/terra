@@ -53,17 +53,18 @@ interface TerrariumConstructor {
 }
 
 /**
- * Terrarium constructor function
- * @param {int} width             number of cells in the x-direction
- * @param {int} height            number of cells in the y-direction
- * @param {object} options
- *   @param {string} id             id assigned to the generated canvas
- *   @param {int} cellSize          pixel width of each cell (default 10)
- *   @param {string} insertAfter    id of the element to insert the canvas after
- *   @param {float} trails          a number from [0, 1] indicating whether trails should
- *                                    be drawn (0 = no trails, 1 = neverending trails)
- *                                    "background" option is required if trails is set
- *   @param {array} background      an RGB triplet for the canvas' background
+ * Creates a terrarium and its canvas.
+ *
+ * @param width - Number of cells along the x-axis; rounded up to an integer.
+ * @param height - Number of cells along the y-axis; rounded up to an integer.
+ * @param options - Optional canvas and neighborhood settings:
+ *   - `id`: ID assigned to the canvas.
+ *   - `cellSize`: Pixel size of each cell; defaults to `10`.
+ *   - `neighborhood` or `neighbourhood`: Use von Neumann neighbors when set to `"vonneumann"` (case-insensitive); otherwise use Moore neighbors.
+ *   - `trails`: Expected trail persistence from `0` to `1`; nonzero values require `background`.
+ *   - `background`: RGB background color, also used when drawing trails.
+ *   - `insertAfter`: Element after which to insert the canvas; otherwise it is appended to the body.
+ *   - `periodic`: Whether neighbor coordinates wrap at grid boundaries.
  */
 const Terrarium: TerrariumConstructor = function (
   this: TerrariumInstance,
@@ -106,12 +107,12 @@ const Terrarium: TerrariumConstructor = function (
 } as unknown as TerrariumConstructor;
 
 /**
- * Create a grid and fill it by using a function, 2-d array, or uniform type
- * @param  {*} content  if  function, fill grid according to fn(x, y)
- *                        if array, fill grid cells with the corresponding creatureType
- *                        if string, fill grid with that creatureType
- *                        otherwise, create empty grid
- * @return {grid}       a grid adhering to the above rules
+ * Creates a grid populated from a coordinate callback, a row-major array, or one creature type.
+ *
+ * @param content - A callback returning a creature type for each `(x, y)`, an array indexed as
+ *   `content[y][x]`, or a type name applied to every cell. Omitted content or unregistered type
+ *   names leave cells empty.
+ * @returns A grid indexed as `grid[x][y]`.
  */
 Terrarium.prototype.makeGrid = function (this: TerrariumInstance, content?: GridContent): Grid {
   const grid: Grid = [];
@@ -137,8 +138,11 @@ Terrarium.prototype.makeGrid = function (this: TerrariumInstance, content?: Grid
 };
 
 /**
- * Create a grid and fill it randomly with a set creature distribution
- * @param  {array} distribution   an array of arrays of the form [string 'creatureName', float fillPercent]
+ * Creates a grid by independently selecting a creature for each cell.
+ *
+ * @param distribution - `[type, weight]` pairs. Weights are cumulative percentage points on a
+ *   `0`–`100` draw; totals below `100` leave the remaining cells empty.
+ * @returns A grid indexed as `grid[x][y]`.
  */
 Terrarium.prototype.makeGridWithDistribution = function (
   this: TerrariumInstance,
@@ -157,9 +161,10 @@ Terrarium.prototype.makeGridWithDistribution = function (
 };
 
 /**
- * Returns the next step of the simulation
- * @param  {} steps   the number of steps to run through before returning
- * @return {grid}     a new grid after <steps> || 1 steps
+ * Advances the simulation for up to the requested number of steps.
+ *
+ * @param steps - Nonnegative integer count; defaults to one when omitted. Zero runs no steps.
+ * @returns The resulting grid, `false` if a step makes no changes, or `undefined` if no steps run.
  */
 Terrarium.prototype.step = function (
   this: TerrariumInstance,
@@ -304,17 +309,17 @@ Terrarium.prototype.step = function (
   return newGrid;
 };
 
-/**
- * Updates the canvas to reflect the current grid
- */
+/** Updates the canvas to reflect the current grid. */
 Terrarium.prototype.draw = function (this: TerrariumInstance): void {
   display(this.canvas, this.grid, this.cellSize, this.trails, this.background);
 };
 
 /**
- * Starts animating the simulation. Can be called with only a function.
- * @param  {int}   steps   the simulation will stop after <steps> steps if specified
- * @param  {Function} fn   called as a callback once the animation finishes
+ * Animates the simulation until it stops changing or reaches the step limit.
+ *
+ * @param steps - Positive integer step limit. Pass a callback here to run until the grid stops changing.
+ * @param fn - Callback invoked when the animation stops.
+ * @remarks Does nothing if an animation is already running.
  */
 Terrarium.prototype.animate = function (
   this: TerrariumInstance,
@@ -345,17 +350,13 @@ Terrarium.prototype.animate = function (
   }
 };
 
-/**
- * Stops a currently running animation
- */
+/** Stops the currently running animation. */
 Terrarium.prototype.stop = function (this: TerrariumInstance): void {
   cancelAnimationFrame(this.nextFrame || 0);
   this.nextFrame = false;
 };
 
-/**
- * Stops any currently running animation and cleans up the DOM
- */
+/** Stops the animation and removes the canvas from its parent element. */
 Terrarium.prototype.destroy = function (this: TerrariumInstance): void {
   const canvas = this.canvas;
   this.stop();

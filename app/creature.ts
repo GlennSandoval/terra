@@ -14,7 +14,7 @@ interface CreatureFactory {
   registerCA(options: CreatureOptions, init?: CreatureInitializer): boolean;
 }
 
-// abstract factory that adds a superclass of baseCreature
+/** Creates the registry used to construct and register creature types. */
 const factory: CreatureFactory = (() => {
   function baseCreature(this: Creature) {
     this.age = -1;

@@ -6,13 +6,13 @@ seedrandom('terra :)', {global: true});
 const _ = customLodash._;
 
 /**
- * Takes a cell and returns the coordinates of its neighbors
- * @param  {int} x0     - x position of cell
- * @param  {int} y0     - y position of cell
- * @param  {int} xMax   - maximum x index i.e. grid width
- * @param  {int} yMax   - maximum x index i.e. grid height
- * @param  {int} radius - (default = 1) neighbor radius
- * @return {array}      - an array of [x, y] pairs of the neighboring cells
+ * Creates a function that returns a cell's neighbor coordinates.
+ *
+ * @param xMax - Grid width.
+ * @param yMax - Grid height.
+ * @param vonNeumann - Whether to use a von Neumann neighborhood instead of a Moore neighborhood.
+ * @param periodic - Whether neighbor coordinates wrap at grid boundaries.
+ * @returns A function that returns the neighbors around a cell for the supplied radius.
  */
 _.getNeighborCoordsFn = (
   xMax: number,

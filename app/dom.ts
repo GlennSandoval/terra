@@ -1,6 +1,15 @@
-// Creates an HD canvas element on page and
-// returns a reference to the element
 import type {Color} from './types';
+
+/**
+ * Creates, inserts, and returns a resolution-scaled canvas.
+ *
+ * @param width - Canvas width in cells.
+ * @param height - Canvas height in cells.
+ * @param cellSize - Pixel size of each cell.
+ * @param id - Optional ID assigned to the canvas.
+ * @param insertAfter - Optional element after which to insert the canvas; otherwise it is appended to the body.
+ * @param background - Optional RGB background color.
+ */
 const createCanvasElement = (
   width: number,
   height: number,
@@ -12,8 +21,7 @@ const createCanvasElement = (
   width *= cellSize;
   height *= cellSize;
 
-  // Creates a scaled-up canvas based on the device's
-  // resolution, then displays it properly using styles
+  /** Creates a resolution-scaled canvas and applies its display styles. */
   function createHDCanvas() {
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
