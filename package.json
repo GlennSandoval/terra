@@ -8,7 +8,7 @@
     "prebuild": "mkdir -p dist",
     "build": "rollup --config && terser dist/terra.js --compress --mangle --output dist/terra.min.js",
     "prepack": "bun run build",
-    "test": "bun run build && bun test ./tests/test.js"
+    "test:smoke": "bun run build && bun test ./tests/test.js"
   },
   "keywords": [
     "terrarium",
