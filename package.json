@@ -3,6 +3,9 @@
   "version": "1.5.2-beta",
   "description": "A JavaScript library for simple biological simulations and cellular automata.",
   "main": "dist/terra.min.js",
+  "engines": {
+    "node": ">=24 <25"
+  },
   "scripts": {
     "prebuild": "node -e \"require('node:fs').mkdirSync('dist', {recursive: true})\"",
     "build": "browserify app/main.js --standalone terra --outfile dist/terra.js && terser dist/terra.js --compress --mangle --output dist/terra.min.js",
