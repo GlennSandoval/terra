@@ -11,7 +11,7 @@
 }
 [class*=" icon-"],
 [class^="icon-"] {
-  font-family: icomoon;
+  font-family: icomoon, sans-serif;
   speak: none;
   font-style: normal;
   font-weight: 400;
@@ -134,10 +134,6 @@ body {
 a {
   color: #bbb;
 }
-a:focus {
-  outline: 0;
-  color: #ff69b4 !important;
-}
 .main {
   line-height: 1.5em;
   width: 50%;
@@ -174,6 +170,16 @@ a:focus {
   height: 100%;
   display: inline-block;
   vertical-align: middle;
+}
+nav {
+  z-index: 1;
+  height: 60px;
+  line-height: 60px;
+  width: 100%;
+  font-size: 0;
+  background: #bbb;
+  -webkit-box-shadow: 0 1px 2px #444;
+  box-shadow: 0 1px 2px #444;
 }
 .sticky nav {
   position: fixed;
@@ -219,16 +225,6 @@ header .downArrow {
   padding-bottom: 1em;
   text-decoration: none;
   color: #fff;
-}
-nav {
-  z-index: 1;
-  height: 60px;
-  line-height: 60px;
-  width: 100%;
-  font-size: 0;
-  background: #bbb;
-  -webkit-box-shadow: 0 1px 2px #444;
-  box-shadow: 0 1px 2px #444;
 }
 nav a {
   text-decoration: none;
@@ -284,6 +280,10 @@ a.question {
   font-weight: 700;
   text-decoration: none;
   color: #6e6e6e;
+}
+a:focus {
+  outline: 0;
+  color: #ff69b4;
 }
 footer {
   height: 96px;
