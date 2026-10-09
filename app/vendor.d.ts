@@ -1,4 +1,4 @@
 declare module 'seedrandom' {
-  const seedrandom: (seed: string, options: {global: boolean}) => unknown;
+  const seedrandom: (seed: string) => () => number;
   export default seedrandom;
 }

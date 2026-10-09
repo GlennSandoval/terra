@@ -1,7 +1,7 @@
 import seedrandom from 'seedrandom';
 import type {NeighborCoordinates, WeightedCreature} from './types';
 
-seedrandom('terra :)', {global: true});
+export const random = seedrandom('terra :)');
 
 /**
  * Creates a function that returns a cell's neighbor coordinates.
@@ -18,104 +18,93 @@ export const getNeighborCoordsFn = (
   vonNeumann: boolean,
   periodic: boolean | undefined,
 ): NeighborCoordinates => {
-  if (periodic) {
-    if (vonNeumann) {
-      // periodic von neumann
+  if (vonNeumann) {
+    if (periodic) {
+      // Periodic von Neumann.
       return (x0, y0, radius) => {
         const coords = [];
-        let x, rX, y, rY, rYMax;
 
-        for (rX = -radius; rX <= radius; ++rX) {
-          rYMax = radius - Math.abs(rX);
-          for (rY = -rYMax; rY <= rYMax; ++rY) {
-            x = (((rX + x0) % xMax) + xMax) % xMax;
-            y = (((rY + y0) % yMax) + yMax) % yMax;
-            if (x !== x0 || y !== y0) {
-              coords.push({
-                x: x,
-                y: y,
-              });
-            }
-          }
-        }
-
-        return coords;
-      };
-    } else {
-      // periodic moore
-      return (x0, y0, radius) => {
-        const coords = [];
-        let x, xLo, xHi, y, yLo, yHi;
-
-        xLo = x0 - radius;
-        yLo = y0 - radius;
-        xHi = x0 + radius;
-        yHi = y0 + radius;
-
-        for (x = xLo; x <= xHi; ++x) {
-          for (y = yLo; y <= yHi; ++y) {
-            if (x !== x0 || y !== y0) {
-              coords.push({
-                x: ((x % xMax) + xMax) % xMax,
-                y: ((y % yMax) + yMax) % yMax,
-              });
-            }
+        for (let rX = -radius; rX <= radius; ++rX) {
+          const x = (((rX + x0) % xMax) + xMax) % xMax;
+          const rYMax = radius - Math.abs(rX);
+          for (let rY = -rYMax; rY <= rYMax; ++rY) {
+            const y = (((rY + y0) % yMax) + yMax) % yMax;
+            if (x !== x0 || y !== y0) coords.push({x, y});
           }
         }
 
         return coords;
       };
     }
-  } else {
-    // non-periodic, need to restrict to within [0, max)
-    xMax -= 1;
-    yMax -= 1;
 
-    if (vonNeumann) {
-      //non-periodic von-neumann
-      return (x0, y0, radius) => {
-        const coords = [];
-        let x, rX, y, rY, rYMax;
+    const xMaxIndex = xMax - 1;
+    const yMaxIndex = yMax - 1;
+    // Non-periodic von Neumann.
+    return (x0, y0, radius) => {
+      const coords = [];
 
-        for (rX = -radius; rX <= radius; ++rX) {
-          rYMax = radius - Math.abs(rX);
-          for (rY = -rYMax; rY <= rYMax; ++rY) {
-            x = rX + x0;
-            y = rY + y0;
-            if (x >= 0 && y >= 0 && x <= xMax && y <= yMax && (x !== x0 || y !== y0)) {
-              coords.push({
-                x: x,
-                y: y,
-              });
-            }
+      for (let rX = -radius; rX <= radius; ++rX) {
+        const x = rX + x0;
+        const rYMax = radius - Math.abs(rX);
+        for (let rY = -rYMax; rY <= rYMax; ++rY) {
+          const y = rY + y0;
+          if (x >= 0 && y >= 0 && x <= xMaxIndex && y <= yMaxIndex && (x !== x0 || y !== y0)) {
+            coords.push({x, y});
           }
         }
+      }
 
-        return coords;
-      };
-    } else {
-      // non-periodic moore
-      return (x0, y0, radius) => {
-        const coords = [];
-        let x, xLo, xHi, y, yLo, yHi;
-
-        xLo = Math.max(0, x0 - radius);
-        yLo = Math.max(0, y0 - radius);
-        xHi = Math.min(x0 + radius, xMax);
-        yHi = Math.min(y0 + radius, yMax);
-
-        for (x = xLo; x <= xHi; ++x)
-          for (y = yLo; y <= yHi; ++y) if (x !== x0 || y !== y0) coords.push({x: x, y: y});
-
-        return coords;
-      };
-    }
+      return coords;
+    };
   }
+
+  if (periodic) {
+    // Periodic Moore.
+    return (x0, y0, radius) => {
+      const coords = [];
+      const xLo = x0 - radius;
+      const yLo = y0 - radius;
+      const xHi = x0 + radius;
+      const yHi = y0 + radius;
+
+      for (let x = xLo; x <= xHi; ++x) {
+        for (let y = yLo; y <= yHi; ++y) {
+          if (x !== x0 || y !== y0) {
+            coords.push({
+              x: ((x % xMax) + xMax) % xMax,
+              y: ((y % yMax) + yMax) % yMax,
+            });
+          }
+        }
+      }
+
+      return coords;
+    };
+  }
+
+  const xMaxIndex = xMax - 1;
+  const yMaxIndex = yMax - 1;
+  // Non-periodic Moore.
+  return (x0, y0, radius) => {
+    const coords = [];
+    const xLo = Math.max(0, x0 - radius);
+    const yLo = Math.max(0, y0 - radius);
+    const xHi = Math.min(x0 + radius, xMaxIndex);
+    const yHi = Math.min(y0 + radius, yMaxIndex);
+
+    for (let x = xLo; x <= xHi; ++x) {
+      for (let y = yLo; y <= yHi; ++y) {
+        if (x !== x0 || y !== y0) coords.push({x, y});
+      }
+    }
+
+    return coords;
+  };
 };
 
 export const pickRandomWeighted = (weightedArrays: WeightedCreature[]): string | false => {
   let sum = 0;
-  const rand = Math.random() * 100;
+  const rand = random() * 100;
   for (let i = 0; i < weightedArrays.length; i++) {
     const cur = weightedArrays[i];
     sum += cur[1];

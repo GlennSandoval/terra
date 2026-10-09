@@ -3,8 +3,10 @@ import {readFileSync} from 'node:fs';
 import {runInNewContext} from 'node:vm';
 import {test} from 'bun:test';
 
-test('package entry rejects duplicate creature types', () => {
+test('package entry rejects duplicate creature types without replacing Math.random', () => {
+  const originalRandom = Math.random;
   const terra = require('..');
+  assert.equal(Math.random, originalRandom);
   assert.equal(terra.registerCA({type: 'alive', color: [0, 0, 0]}), true);
   assert.equal(terra.registerCA({type: 'alive', color: [0, 0, 0]}), false);
 });

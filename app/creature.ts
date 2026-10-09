@@ -1,3 +1,5 @@
+import {random} from './util';
+
 import type {
   Creature,
   CreatureAction,
@@ -11,6 +13,30 @@ interface CreatureFactory {
   make(type: string | false | undefined, options?: CreatureOptions): Creature | false;
   registerCreature(options: CreatureOptions, init?: CreatureInitializer): boolean;
   registerCA(options: CreatureOptions, init?: CreatureInitializer): boolean;
+}
+
+function selectCreatureAction(creature: Creature, neighbors: Neighbor[]): CreatureAction | false {
+  const maxEnergy = creature.maxEnergy;
+
+  if (
+    creature.energy !== undefined &&
+    maxEnergy !== undefined &&
+    creature.reproduceLv !== undefined &&
+    creature.energy > maxEnergy * creature.reproduceLv &&
+    creature.reproduce
+  ) {
+    return creature.reproduce(neighbors);
+  } else if (
+    creature.energy !== undefined &&
+    maxEnergy !== undefined &&
+    creature.moveLv !== undefined &&
+    creature.energy > maxEnergy * creature.moveLv &&
+    creature.move
+  ) {
+    return creature.move(neighbors);
+  }
+
+  return false;
 }
 
 /** Creates the registry used to construct and register creature types. */
@@ -51,7 +77,7 @@ const factory: CreatureFactory = (() => {
     });
 
     if (spots.length) {
-      const step = spots[Math.floor(Math.random() * spots.length)];
+      const step = spots[Math.floor(random() * spots.length)];
       const coords = step.coords;
       const creature = factory.make(this.type);
 
@@ -93,7 +119,7 @@ const factory: CreatureFactory = (() => {
     // if we've got a spot to move to...
     if (spots.length) {
       // ...pick one
-      const step = spots[Math.floor(Math.random() * spots.length)];
+      const step = spots[Math.floor(random() * spots.length)];
 
       const coords = step.coords;
 
@@ -126,26 +152,7 @@ const factory: CreatureFactory = (() => {
     _x: number,
     _y: number,
   ) {
-    let step: CreatureAction | false = {x: 0, y: 0, creature: false};
-    const maxEnergy = this.maxEnergy;
-
-    if (
-      this.energy !== undefined &&
-      maxEnergy !== undefined &&
-      this.reproduceLv !== undefined &&
-      this.energy > maxEnergy * this.reproduceLv &&
-      this.reproduce
-    ) {
-      step = this.reproduce(neighbors);
-    } else if (
-      this.energy !== undefined &&
-      maxEnergy !== undefined &&
-      this.moveLv !== undefined &&
-      this.energy > maxEnergy * this.moveLv &&
-      this.move
-    ) {
-      step = this.move(neighbors);
-    }
+    const step = selectCreatureAction(this, neighbors);
 
     if (step !== false && step.creature) {
       const creature = step.creature;
@@ -204,9 +211,9 @@ const factory: CreatureFactory = (() => {
         // set the color randomly if none is provided
         if (typeof color !== 'object' || color.length !== 3) {
           options.color = [
-            Math.floor(Math.random() * 256),
-            Math.floor(Math.random() * 256),
-            Math.floor(Math.random() * 256),
+            Math.floor(random() * 256),
+            Math.floor(random() * 256),
+            Math.floor(random() * 256),
           ];
         }
 
@@ -239,9 +246,9 @@ const factory: CreatureFactory = (() => {
         // set the color randomly if none is provided
         if (typeof color !== 'object' || color.length !== 3) {
           options.color = [
-            Math.floor(Math.random() * 256),
-            Math.floor(Math.random() * 256),
-            Math.floor(Math.random() * 256),
+            Math.floor(random() * 256),
+            Math.floor(random() * 256),
+            Math.floor(random() * 256),
           ];
         }
 

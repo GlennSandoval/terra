@@ -1,4 +1,4 @@
-import {getNeighborCoordsFn, pickRandomWeighted} from './util';
+import {getNeighborCoordsFn, pickRandomWeighted, random} from './util';
 import factory from './creature';
 import display from './display';
 import {createCanvasElement} from './dom';
@@ -24,7 +24,7 @@ interface TerrariumOptions {
   periodic?: boolean;
 }
 
-type GridContent = string | string[][] | ((x: number, y: number) => string) | undefined;
+type GridContent = string | string[][] | ((x: number, y: number) => string | false) | undefined;
 type PendingGrid = Array<Array<CreatureAction[] | false>>;
 
 interface TerrariumInstance {
@@ -109,7 +109,7 @@ const Terrarium: TerrariumConstructor = function (
 /**
  * Creates a grid populated from a coordinate callback, a row-major array, or one creature type.
  *
- * @param content - A callback returning a creature type for each `(x, y)`, an array indexed as
+ * @param content - A callback returning a creature type or `false` for each `(x, y)`, an array indexed as
  *   `content[y][x]`, or a type name applied to every cell. Omitted content or unregistered type
  *   names leave cells empty.
  * @returns A grid indexed as `grid[x][y]`.
@@ -121,17 +121,15 @@ Terrarium.prototype.makeGrid = function (this: TerrariumInstance, content?: Grid
     grid.push([]);
     const height = this.height;
     for (let y = 0; y < height; y++) {
-      grid[x].push(
-        factory.make(
-          typeof content === 'function'
-            ? content(x, y)
-            : Array.isArray(content) && content.length
-              ? (content[y] || [])[x]
-              : typeof content === 'string'
-                ? content
-                : undefined,
-        ),
-      );
+      let type: string | false | undefined;
+      if (typeof content === 'function') {
+        type = content(x, y);
+      } else if (Array.isArray(content) && content.length) {
+        type = content[y]?.[x];
+      } else if (typeof content === 'string') {
+        type = content;
+      }
+      grid[x].push(factory.make(type));
     }
   }
   return grid;
@@ -148,16 +146,7 @@ Terrarium.prototype.makeGridWithDistribution = function (
   this: TerrariumInstance,
   distribution: WeightedCreature[],
 ): Grid {
-  const grid: Grid = [];
-  const width = this.width;
-  for (let x = 0; x < width; x++) {
-    grid.push([]);
-    const height = this.height;
-    for (let y = 0; y < height; y++) {
-      grid[x].push(factory.make(pickRandomWeighted(distribution)));
-    }
-  }
-  return grid;
+  return this.makeGrid(() => pickRandomWeighted(distribution));
 };
 
 /**
@@ -249,7 +238,7 @@ Terrarium.prototype.step = function (
 
   function pickWinnerInner(superposition: CreatureAction[] | false, x: number, y: number): void {
     if (superposition) {
-      const winner = superposition.splice(Math.floor(Math.random() * superposition.length), 1)[0];
+      const winner = superposition.splice(Math.floor(random() * superposition.length), 1)[0];
       // Actions in this grid were emitted by live creatures.
       const winnerCreature = winner.creature as Creature;
       const nextGrid = newGrid;

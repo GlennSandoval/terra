@@ -37,15 +37,66 @@ test('constructor rounds dimensions and makeGrid resolves content by coordinates
     {x: 0, y: 1},
     {x: 1, y: 0},
   ]);
-  const grid = terrarium.makeGrid((x, y) => (x === 1 && y === 0 ? type : 'missing'));
+  const callbackOrder: Array<[number, number]> = [];
+  const grid = terrarium.makeGrid((x, y) => {
+    callbackOrder.push([x, y]);
+    if (x === 1 && y === 0) return type;
+    if (x === 2 && y === 1) return false;
+    return 'missing';
+  });
+  expect(callbackOrder).toEqual([
+    [0, 0],
+    [0, 1],
+    [1, 0],
+    [1, 1],
+    [2, 0],
+    [2, 1],
+  ]);
   expect(grid[1][0]).toMatchObject({type});
   expect(grid[0][0]).toBe(false);
-  expect(
-    terrarium
-      .makeGridWithDistribution([[type, 100]])
-      .flat()
-      .every((cell) => cell !== false),
-  ).toBe(true);
+  expect(grid[2][1]).toBe(false);
+  const distributed = terrarium.makeGridWithDistribution([[type, 100]]);
+  for (const column of distributed) {
+    for (const cell of column) expect(cell).toMatchObject({type});
+  }
+});
+
+test('makeGrid reads row-major arrays and leaves empty or missing rows empty', () => {
+  installDom();
+  const firstType = 'terrarium.spec.grid.row-major.first';
+  const secondType = 'terrarium.spec.grid.row-major.second';
+  factory.registerCA({type: firstType, color: [1, 2, 3]});
+  factory.registerCA({type: secondType, color: [4, 5, 6]});
+  const terrarium = new Terrarium(2, 3);
+
+  const grid = terrarium.makeGrid([
+    [firstType, secondType],
+    [secondType, firstType],
+    [firstType, secondType],
+  ]);
+  expect(grid[1][2]).toMatchObject({type: secondType});
+  expect(grid[0][2]).toMatchObject({type: firstType});
+
+  const partialGrid = terrarium.makeGrid([[firstType], []]);
+  expect(partialGrid[0][0]).toMatchObject({type: firstType});
+  expect(partialGrid[0].slice(1)).toEqual([false, false]);
+  expect(partialGrid[1]).toEqual([false, false, false]);
+});
+
+test('empty and zero-weight distributions leave every grid cell empty', () => {
+  installDom();
+  const type = 'terrarium.spec.grid.zero-weight';
+  factory.registerCA({type, color: [1, 2, 3]});
+  const terrarium = new Terrarium(2, 3);
+
+  expect(terrarium.makeGridWithDistribution([])).toEqual([
+    [false, false, false],
+    [false, false, false],
+  ]);
+  expect(terrarium.makeGridWithDistribution([[type, 0]])).toEqual([
+    [false, false, false],
+    [false, false, false],
+  ]);
 });
 
 test('step moves an observed creature action and leaves the origin empty', () => {
