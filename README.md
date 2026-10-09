@@ -14,7 +14,7 @@ bun run test
 bun run test:smoke
 ```
 
-`bun run typecheck` checks source and type-contract specs. `bun run test` runs unit specs
+`bun run typecheck` checks application sources and co-located `.spec.ts` files. `bun run test` runs unit specs
 and the type check; `bun run test:smoke` builds the library and smoke-checks the package entry and browser bundle. To build without running
 the smoke test, use `bun run build`. Rollup produces the UMD bundle `dist/terra.js`; Terser
 writes `dist/terra.min.js`. The latter is the package entry and exposes `terra`
