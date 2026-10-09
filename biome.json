@@ -6,7 +6,7 @@
     "useIgnoreFile": true
   },
   "files": {
-    "includes": ["**", "!!dist", "!!demo", "!!terra.js", "!!**/*.min.js"]
+    "includes": ["**", "!!dist", "!!demo/*.svg", "!!**/*.min.js"]
   },
   "formatter": {
     "enabled": true,

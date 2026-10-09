@@ -14,4 +14,4 @@ if (exitCode !== 0) {
   process.exit(exitCode);
 }
 
-await copyFile(resolve(root, 'dist/terra.min.js'), resolve(root, 'demo/terra.demo.min.js'));
+await copyFile(resolve(root, 'dist/terra.min.js'), resolve(root, 'demo/terra.min.js'));

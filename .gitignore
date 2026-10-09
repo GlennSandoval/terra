@@ -2,5 +2,6 @@
 bower_components
 node_modules
 .idea
+.playwright-cli
 dist/
-demo/terra.demo.min.js
+demo/terra.min.js

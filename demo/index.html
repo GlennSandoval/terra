@@ -4,14 +4,17 @@
   <meta charset="UTF-8">
   <title>terra.js</title>
   <link rel="stylesheet" href="main.css">
+  <link rel="stylesheet" href="examples.css">
   <link href='http://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
 </head>
 <body>
   <div class="fullPage splash">
     <div class="vcent"></div>
+    <div id="heroCanvas"></div>
     <header id="header">
       <h1>terra.js <span>alpha</span></h1>
       <p>A JavaScript framework for simple biological simulations and cellular automata.</p>
+      <button class="simulation-control hero-control" id="heroControl" type="button">Pause</button>
       <a data-scroll href="#main" id="scroller1" class="downArrow">⬇</a>
     </header>
   </div>
@@ -33,18 +36,17 @@
 
     <h3>Including terra</h3>
     <p>Getting started is as easy as including the script!</p>
-    <pre><code class="language-markup">&lt;script src="path/to/terra.min.js"&gt;&lt;/script&gt;</code></pre>
+    <pre><code class="language-markup">&lt;script src="terra.min.js"&gt;&lt;/script&gt;</code></pre>
     <p>terra can also be used as a module with most popular module systems. <a class="question" target="_blank" href="https://github.com/umdjs/umd">?</a></p>
-    <pre><code class="language-javascript">
-    </code></pre>
+    <pre><code class="language-javascript">import {Terrarium, registerCA, registerCreature} from 'terra';</code></pre>
 
     <h3>Creating creatures</h3>
-    <p>Let's create a simple creature using the creatureFactory. Each creature requires a type.</p>
-    <pre><code class="language-javascript">terra.creatureFactory.register({
+    <p>Let's create a simple creature with <code>terra.registerCreature</code>. Each creature requires a type.</p>
+    <pre><code class="language-javascript">terra.registerCreature({
   type: 'firstCreature'
 });</code></pre>
     <p>This creature is valid, but it's pretty boring. To make a more interesting creature, let's override some of the default <a data-scroll href="#creatures">attributes and methods</a>.</p>
-    <pre><code class="language-javascript">terra.creatureFactory.register({
+    <pre><code class="language-javascript">terra.registerCreature({
   type: 'secondCreature',
   color: [120, 0, 240],
   sustainability: 6,
@@ -53,83 +55,107 @@
     <p>We've just created a purple creature that only eats if 6 or more plants are around it. These creatures basically seek out an edge or corner and die there.</p>
 
     <h3>Creating the environment</h3>
-    <p>To run a simulation, we'll need to create an environment. Let's make a 25x25 grid, populate 10% of the space with our lonely purple creature, and fill the rest with simple plants.</p>
-    <pre><code class="language-javascript">var ex1 = new terra.Terrarium(25, 25, 'ex1');
-ex1.populate([['secondCreature', 10], ['simplePlant', 90]]);</code></pre>
+    <p>To run a simulation, register the plant type, create a 25x25 grid, and fill it with 10% purple creatures and 90% plants.</p>
+    <pre><code class="language-javascript">terra.registerCreature({
+  type: 'simplePlant',
+  color: [0, 120, 0],
+  size: 10,
+  initialEnergy: 5,
+  maxEnergy: 20,
+  move: false,
+  reproduceLv: 0.65,
+  wait() {
+    this.energy += 1;
+  }
+});
+
+const ex1 = new terra.Terrarium(25, 25, {id: 'ex1'});
+ex1.grid = ex1.makeGridWithDistribution([['secondCreature', 10], ['simplePlant', 90]]);</code></pre>
 
     <h3>Running a simulation</h3>
 
     <p>Terrariums have a few methods that allow you to interact with the simulation. Let's animate it and see how it does for the first 300 steps.</p>
     <pre id="ex1End"><code class="language-javascript">ex1.animate(300);</code></pre>
+    <div class="simulation">
+      <div id="ex1Canvas"></div>
+      <button class="simulation-control" id="ex1Control" type="button">Pause</button>
+    </div>
 
     <p>That's all there is to it! Though it's possible to generate complex behaviours by simply overriding default values, the real fun comes when you realize that <a data-scroll href="#customOptions">creatures are entirely customizable</a>.</p>
 
     <h2 id="examples">Examples</h2>
 
     <h3 id="gol">Conway's Game of Life <a class="question" target="_blank" href="http://en.wikipedia.org/wiki/Conway's_Game_of_Life">?</a></h3>
-    <pre><code class="language-javascript">var gameOfLife = new terra.Terrarium(25, 25);
-
-terra.creatureFactory.register({
+    <pre><code class="language-javascript">terra.registerCA({
   type: 'GoL',
-  colorFn: function () { return this.alive ? this.color + ',1' : '0,0,0,0'; },
-  wait: function () {},
-  isDead: function () { return false; },
-  queue: function (neighbors) {
-    var surrounding = _.filter(neighbors, function (spot) {
-      return spot.creature.alive;
-    }).length;
-    this.alive = surrounding === 3 || surrounding === 2 &amp;&amp; this.alive;
-    return false;
-  }
+  color: [255, 255, 255],
+  colorFn() {
+    return this.alive ? `${this.color},1` : '0,0,0,0';
+  },
+  process(neighbors) {
+    const aliveNeighbors = neighbors.filter(
+      ({creature}) => creature && creature.alive,
+    ).length;
+    const nextAlive = aliveNeighbors === 3 || (this.alive && aliveNeighbors === 2);
+    const changed = nextAlive !== this.alive;
+    this.alive = nextAlive;
+    return changed;
+  },
 }, function () {
-  this.alive = Math.random() &lt; 0.5;
+  this.alive = Math.random() < 0.5;
 });
 
-gameOfLife.populate([['GoL', 100]]);
+const gameOfLife = new terra.Terrarium(25, 25, {periodic: true});
+gameOfLife.grid = gameOfLife.makeGrid('GoL');
 gameOfLife.animate();</code></pre>
+    <div class="simulation">
+      <div id="lifeCanvas"></div>
+      <button class="simulation-control" id="lifeControl" type="button">Pause</button>
+    </div>
 
     <h3 id="cyclic">Cyclic Cellular Automaton <a class="question" target="_blank" href="http://en.wikipedia.org/wiki/Cyclic_cellular_automaton">?</a></h3>
-    <pre><code class="language-javascript">var cyclic = new terra.Terrarium(100, 100);
-
-terra.creatureFactory.register({
+    <pre><code class="language-javascript">terra.registerCA({
   type: 'cyclic',
   colors: ['255,0,0,1', '255,96,0,1', '255,191,0,1', '223,255,0,1', '128,255,0,1', '32,255,0,1', '0,255,64,1', '0,255,159,1', '0,255,255,1', '0,159,255,1', '0,64,255,1', '32,0,255,1', '127,0,255,1', '223,0,255,1', '255,0,191,1', '255,0,96,1'],
-  colorFn: function () { return this.colors[this.state];},
-  wait: function () {},
-  isDead: function () { return false; },
-  queue: function (neighbors) {
-    var next = (this.state + 1) % 16;
-    var changing = _.some(neighbors, function (spot) {
-      return spot.creature.state === next;
-    });
-    if (changing) this.state = next;
-  }
+  colorFn() {
+    return this.colors[this.state];
+  },
+  process(neighbors) {
+    const nextState = (this.state + 1) % this.colors.length;
+    const changes = neighbors.some(
+      ({creature}) => creature && creature.state === nextState,
+    );
+    if (!changes) return false;
+    this.state = nextState;
+    return true;
+  },
 }, function () {
   this.state = Math.floor(Math.random() * 16);
 });
 
-cyclic.populate([['cyclic', 100]]);
+const cyclic = new terra.Terrarium(50, 50, {cellSize: 6, periodic: true});
+cyclic.grid = cyclic.makeGrid('cyclic');
 cyclic.animate();</code></pre>
+    <div class="simulation">
+      <div id="cyclicCanvas"></div>
+      <button class="simulation-control" id="cyclicControl" type="button">Pause</button>
+    </div>
 
     <h3 id="brutesAndBullies">Brutes and Bullies</h3>
-    <pre><code class="language-javascript">// the demo running at the top of this page
-var paTerrarium = new terra.Terrarium(25, 25);
-
-terra.creatureFactory.register({
+    <pre><code class="language-javascript">terra.registerCreature({
   type: 'plant',
   color: [0, 120, 0],
   size: 10,
   initialEnergy: 5,
   maxEnergy: 20,
-  wait: function() {
-    // photosynthesis :)
+  wait() {
     this.energy += 1;
   },
   move: false,
   reproduceLv: 0.65
 });
 
-creatureFactory.register({
+terra.registerCreature({
   type: 'brute',
   color: [0, 255, 255],
   maxEnergy: 50,
@@ -137,7 +163,7 @@ creatureFactory.register({
   size: 20
 });
 
-creatureFactory.register({
+terra.registerCreature({
   type: 'bully',
   color: [241, 196, 15],
   initialEnergy: 20,
@@ -145,20 +171,29 @@ creatureFactory.register({
   sustainability: 3
 });
 
-paTerrarium.populate([['plant', 50], ['brute', 5], ['bully', 5]]);
+const paTerrarium = new terra.Terrarium(25, 25);
+paTerrarium.grid = paTerrarium.makeGridWithDistribution([
+  ['plant', 50],
+  ['brute', 5],
+  ['bully', 5],
+]);
 paTerrarium.animate();</code></pre>
+    <div class="simulation">
+      <div id="bulliesCanvas"></div>
+      <button class="simulation-control" id="bulliesControl" type="button">Pause</button>
+    </div>
 
   <p>If you come up with a cool example, <a href="mailto:i@rileyjshaw.com">let me know</a>! I'll add it to this list and credit you.</p>
 
     <h2 id="creatures">Creatures</h2>
-    <p>Creatures are registered with <pre><code class="language-javascript">terra.creatureFactory.register(options, init)</code></pre></p>
+    <p>Register creatures with <code>terra.registerCreature(options, init)</code> and cellular automata with <code>terra.registerCA(options, init)</code>.</p>
 
     <p>The following methods and attributes can be passed in an object as the first argument:</p>
     <h3 id="creatureOptions">Required</h3>
     <ul class="defaults">
       <li>
         <h4><span class="token keyword">string</span> type</h4>
-        <p>Creature type, to be used later in <a data-scroll href="#terrariumMethods" class="token function">populate( )</a>.</p>
+        <p>Creature type used later when creating a grid with <a data-scroll href="#terrariumMethods" class="token function">makeGrid( )</a>.</p>
       </li>
     </ul>
 
@@ -179,8 +214,8 @@ paTerrarium.animate();</code></pre>
         </ul>
       </li>
       <li>
-        <h4><span class="token keyword">int [3]</span> color</h4>
-        <p>RGB components of a creature's display color.</p>
+        <h4><span class="token keyword">Color</span> color</h4>
+        <p>RGB component array or comma-separated color string.</p>
         <ul>
           <li>Range: [0, 255]</li>
           <li>Default: random</li>
@@ -194,7 +229,7 @@ paTerrarium.animate();</code></pre>
         </ul>
       </li>
       <li>
-        <h4><span class="token keyword">int</span> efficiency</h4>
+        <h4><span class="token keyword">float</span> efficiency</h4>
         <p>Conversion ratio of food to energy. Food energy &times; efficiency = gained energy.</p>
         <ul>
           <li>Default: 0.7</li>
@@ -202,7 +237,7 @@ paTerrarium.animate();</code></pre>
       </li>
       <li id="initialEnergy">
         <h4><span class="token keyword">float</span> initialEnergy</h4>
-        <p>Energy level that a creature has at the start of its life.
+        <p>Energy level assigned when a creature is created.</p>
         <ul>
           <li>Range: (0, <a data-scroll href="#maxEnergy">maxEnergy</a>]</li>
           <li>Default: 50</li>
@@ -234,20 +269,19 @@ paTerrarium.animate();</code></pre>
       </li>
       <li>
         <h4><span class="token keyword">float</span> moveLv</h4>
-        <p></p>
+        <p>Energy threshold for movement in the default <a data-scroll href="#process">process</a> behavior.</p>
         <ul>
-          <p>Percentage of a creature's max energy below which it will stop moving (used in the default <a data-scroll href="#queue">queue</a> method).</p>
           <li>Default: 0</li>
           <li>Range: [0, 1]</li>
         </ul>
       </li>
-      <li id="queue">
-        <h4><span class="token keyword">function</span> queue</h4>
-        <p>Main entry point for behavior; called for each creature on each iteration.</p>
+      <li id="process">
+        <h4><span class="token keyword">function</span> process</h4>
+        <p>Called for each creature on each simulation step.</p>
         <ul>
-          <li>Parameters: <span class="mono"><span class="token keyword">{coords, creature} []</span> neighbors</span></li>
-          <li>Default: Reproduce if energy is sufficient, otherwise move if energy is sufficient, otherwise wait.</li>
-          <li>Returns: <span class="mono">{x, y, creature} || false</span></li>
+          <li>Parameters: <span class="mono"><span class="token keyword">neighbors, x, y</span></span></li>
+          <li>Default: Reproduce or move according to energy thresholds, otherwise wait.</li>
+          <li>Returns: an action object, a boolean change indicator, or <code>undefined</code>.</li>
         </ul>
       </li>
       <li>
@@ -261,7 +295,7 @@ paTerrarium.animate();</code></pre>
       </li>
       <li>
         <h4><span class="token keyword">float</span> reproduceLv</h4>
-        <p>Percentage of a creature's max energy above which it will reproduce (used in the default <a data-scroll href="#queue">queue</a> method).</p>
+        <p>Energy threshold for reproduction in the default <a data-scroll href="#process">process</a> behavior.</p>
         <ul>
           <li>Default: 0.7</li>
           <li>Range: [0, 1]</li>
@@ -295,15 +329,23 @@ paTerrarium.animate();</code></pre>
       </li>
     </ul>
 
-    <p>The second argument to terra.creatureFactory.register is the init function. This function is run within a creature's constructor and allows you to set different attributes for individual creatures. For example, in the <a data-scroll href="#cyclic">Cyclic Cellular Automaton</a> example above we see the following init function:</p>
-    <pre><code class="language-javascript">function () {
+    <p>The optional second argument to <code>terra.registerCreature</code> or <code>terra.registerCA</code> initializes each new creature. For example, this initializer assigns a random state to each cell in the <a data-scroll href="#cyclic">Cyclic Cellular Automaton</a>:</p>
+    <pre><code class="language-javascript">function initCyclic() {
   this.state = Math.floor(Math.random() * 16);
-});</code></pre>
+}</code></pre>
     <p>Whenever a new creature is created of type 'cyclic', it will be randomly assigned a state of 0 to 15.</p>
 
     <h2 id="terrarium">Terrarium</h2>
     <p>Terrariums are where the action happens. They're initialized with the following constructor:</p>
-    <pre><code class="language-javascript">var t = new terra.Terrarium(width, height, id, cellSize, insertAfter);</code></pre>
+    <pre><code class="language-javascript">const t = new terra.Terrarium(width, height, {
+  id,
+  cellSize,
+  insertAfter,
+  neighborhood,
+  periodic,
+  trails,
+  background,
+});</code></pre>
     <h3>Required</h3>
     <ul class="defaults">
       <li>
@@ -315,51 +357,56 @@ paTerrarium.animate();</code></pre>
         <p>Number of cells in the y-direction.</p>
       </li>
     </ul>
-    <h3>Optional</h3>
+    <h3>Options</h3>
     <ul class="defaults">
       <li>
         <h4><span class="token keyword">string</span> id</h4>
-        <p>id assigned to the generated canvas.</p>
+        <p>ID assigned to the generated canvas.</p>
       </li>
       <li>
         <h4><span class="token keyword">int</span> cellSize</h4>
-        <p>Pixel width of each cell.</p>
-        <ul>
-          <li>Default: 10</li>
-        </ul>
+        <p>Pixel width of each cell. Defaults to 10.</p>
       </li>
       <li>
-        <h4><span class="token keyword">string</span> insertAfter</h4>
-        <p>id of the element to insert the canvas after.</p>
-        <ul>
-          <li>Default: canvas is appended to <code class="language-markup">document.body</code></li>
-        </ul>
+        <h4><span class="token keyword">Element</span> insertAfter</h4>
+        <p>Element after which the canvas is inserted. By default, the canvas is appended to <code>document.body</code>.</p>
+      </li>
+      <li>
+        <h4><span class="token keyword">boolean</span> periodic</h4>
+        <p>When true, neighbors wrap around the grid edges.</p>
+      </li>
+      <li>
+        <h4><span class="token keyword">string</span> neighborhood</h4>
+        <p>Set to <code>vonneumann</code> to use von Neumann neighbors; defaults to Moore neighbors.</p>
+      </li>
+      <li>
+        <h4><span class="token keyword">number</span> trails</h4>
+        <p>Trail persistence from 0 to 1. Requires a <code>background</code> color.</p>
+      </li>
+      <li>
+        <h4><span class="token keyword">Color</span> background</h4>
+        <p>RGB background color, also used when drawing trails.</p>
       </li>
     </ul>
 
-    <p id="terrariumMethods">Once initialized, terrariums have a few exposed methods. Using our terrarium <code class="language-javascript">t</code> that we just created:</p>
-    <pre><code class="language-javascript">t.populate(creatures);
-//populates the terrarium with a set distribution of creatures.
-//&lt;creatures&gt; is an array of arrays of the form [string 'creatureName', int fillPercent]
-
+    <p id="terrariumMethods">Terrariums expose grid creation and drawing methods. Using our terrarium <code class="language-javascript">t</code>:</p>
+    <pre><code class="language-javascript">t.grid = t.makeGrid('creatureType');
+t.grid = t.makeGridWithDistribution([
+  ['creatureType', 80],
+  ['anotherType', 20],
+]);
 t.grid = t.step(steps);
-//t.step returns the next step of the simulation, or the grid after &lt;steps&gt; steps if specified.
-//here, we're setting the terrarium's grid to the returned grid.
-
 t.draw();
-//updates the canvas to reflect the current grid
-
 t.animate(steps, fn);
-//starts animating the simulation. The simulation will stop after &lt;steps&gt; steps
-//if specified, and call &lt;fn&gt; as a callback once the animation finishes.
-
 t.stop();
-//stops a currently running animation</code></pre>
+t.destroy();</code></pre>
+    <p><code>makeGrid</code> creates a grid from a creature type, a row-major array, or a coordinate callback. <code>makeGridWithDistribution</code> uses weighted percentages. <code>step</code> returns the next grid, <code>false</code> when a step makes no changes, or <code>undefined</code> when no steps run. <code>animate</code> stops when the grid no longer changes or when its step limit is reached.</p>
 
     <p>Still want more? Check out the source on <a href="https://github.com/rileyjshaw/terra">GitHub</a>!</p>
   </div>
 
   <footer>Created with ❤ by <a href="http://rileyjshaw.com">rileyjshaw</a>. Inspired by <a href="http://eloquentjavascript.net/">Marijn Haverbeke</a> and <a href="https://www.wolframscience.com/">Stephen Wolfram</a>.</footer>
-  <script src="terra.demo.min.js"></script>
+  <script src="terra.min.js"></script>
+  <script src="examples.js"></script>
 </body>
 </html>
