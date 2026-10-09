@@ -8,6 +8,7 @@
   "scripts": {
     "prebuild": "mkdir -p dist",
     "build": "rm -f dist/*.d.ts && tsc -p tsconfig.build.json && rollup --config && rm -rf dist/.types && terser dist/terra.js --compress --mangle --output dist/terra.min.js",
+    "build:demo": "bun run scripts/build-demo.ts",
     "prepack": "bun run build",
     "check": "biome check .",
     "format": "biome format --write .",

@@ -62,12 +62,14 @@ bun run format
 bun run typecheck
 bun run test
 bun run test:smoke
+bun run build:demo
 ```
 
 `bun run check` checks formatting and lint rules.  
 `bun run format` applies formatting.  
 `bun run test` runs unit tests and the type check.  
 `bun run test:smoke` builds the package and checks its package entry and browser bundle.
+`bun run build:demo` builds the project and copies `dist/terra.min.js` to the ignored `demo/terra.demo.min.js` bundle.
 
 Use `bun run build` to build without the smoke test. It writes `dist/terra.js`, `dist/terra.min.js`, and the bundled declarations in `dist/terra.d.ts`.
 
