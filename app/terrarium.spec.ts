@@ -61,7 +61,7 @@ test('step moves an observed creature action and leaves the origin empty', () =>
     },
   });
   const terrarium = new Terrarium(2, 1);
-  terrarium.grid = terrarium.makeGrid(type);
+  terrarium.grid = terrarium.makeGrid([[type, '']]);
 
   const next = terrarium.step();
   if (next === false || next === undefined) throw new Error('step did not produce a changed grid');
